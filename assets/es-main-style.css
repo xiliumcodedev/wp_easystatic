@@ -305,10 +305,13 @@ table#datatable tr:nth-child(odd) td{
 }
 #static-merge-update{
 	position: absolute;
-    right: 26px;
+  right: 26px;
 }
 
-
+#static-paste-update{
+  position: absolute;
+  right: 250px;
+}
 
 #es-loader{
 	display: none;

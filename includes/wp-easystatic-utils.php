@@ -224,7 +224,7 @@ static function es_domain_path(){
 static function es_plugin_link( $links ){
 
 	$links[] = '<a href="' .
-		admin_url( 'admin.php?page=' . EASYSTASTIC_SLUG ) .
+		admin_url( 'options-general.php?page=' . EASYSTASTIC_SLUG ) .
 		'">' . __('Settings') . '</a>';
 
 	return $links;

@@ -16,6 +16,7 @@ define(['require', 'exports'], function(require, exports){
 			 refresh : j("#refresh"),
 			 static_activate : j(".static_activate"),
 			 static_merge_update : j('#static-merge-update'),
+			 static_paste_update : j('#static-paste-update'),
 			 create_backup : j("#create_backup"),
 			 es_loader : j("#es-loader")
 		}

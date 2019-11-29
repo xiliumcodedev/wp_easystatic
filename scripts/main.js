@@ -70,6 +70,15 @@ requirejs(["jquery", "wp_es_var", "wp_es_scanner", "wp_es_func", "wp_es_cm", "wp
 		})
 
 		events('click', {
+			elem : vars.static_paste_update,
+			func : function(){
+				var static_content = codemirror.mergeView().editor().getValue();
+				var site_content = codemirror.mergeView().leftOriginal().getValue();
+				codemirror.mergeView().editor().setValue(site_content)
+			}
+		})
+
+		events('click', {
 			elem : vars.start_scan,
 			func : function(){
 				wp_es_scanner.scanning_process();

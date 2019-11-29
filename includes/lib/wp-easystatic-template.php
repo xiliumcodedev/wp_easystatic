@@ -209,6 +209,7 @@ class WP_Easystatic_Template{
 			 <div class='top-modal'>
 			 <h3 class='update-title'></h3>
 			 <div class='btn-modal'>
+			 	<button id="static-paste-update" class="button button-primary"><?= __('Paste Dynamic Content', 'easystatic') ?></button>
 			 <button id="static-merge-update" class="button button-primary"><?= __('Update', 'easystatic') ?></button>
 			 </div>
 			</div>

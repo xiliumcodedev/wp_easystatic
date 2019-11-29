@@ -361,7 +361,7 @@ class WP_Easystatic_Function{
 		Add the menu from admin dashboard
 	*/
  	function easystatic_dashboard(){
-		add_menu_page(__('wp-easystatic', 'easystatic'), __('Easystatic', 'easystatic'), 'edit_theme_options', 
+		add_options_page(__('wp-easystatic', 'easystatic'), __('Easystatic', 'easystatic'), 'edit_theme_options', 
 	    	EASYSTASTIC_SLUG ,  array($this, 'init_template'));
 	}
 

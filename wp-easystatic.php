@@ -1,21 +1,37 @@
 <?php
 /*
-Plugin Name: WP Easystatic
-Plugin URI: https://github.com/xiliumcodedev/wp_easystatic
-Description: Generate and Optimize your website to a static HTML file
-Author: XiliumCodeDev
-Version: 1.2.0
-Requires at least: 5.4
-Author URI: https://www.linkedin.com/in/ian-paul-jocsing-7bb24717b/
-Text Domain: easystatic
-Domain Path: /languages
+* Plugin Name: WP Easystatic
+* Plugin URI: https://github.com/xiliumcodedev/wp_easystatic
+* Description: Generate and Optimize your website to a static HTML file
+* Author: XiliumCodeDev
+* Author URI: https://www.linkedin.com/in/ian-paul-jocsing-7bb24717b/
+* Version: 1.6.0
+* Text Domain: easystatic
+* Domain Path: /languages
+Released under the GNU General Public License (GPL)
+http://www.gnu.org/licenses/gpl.txt
+*/
+/*  Copyright 2019 XiliumCodeDev
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License, version 2, as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 if (!defined( 'ABSPATH' ) ) {
    exit;
 }
 
-DEFINE('EASYSTATIC_PLUGIN_VERSION', '1.0.1' );
+DEFINE('EASYSTATIC_PLUGIN_VERSION', '1.6.0' );
 
 DEFINE('EASYSTASTIC_FILE', __FILE__);
 
