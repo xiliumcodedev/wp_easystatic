@@ -30,3 +30,26 @@ Just install from your WordPress "Plugins > Add New" screen and all will be well
 1. Upload the zip file and unzip it in the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Go to `Settings > Easystatic` and go to general tab. Require to set your static directory.
+
+
+== Screenshots ==
+
+1. screenshot-1.png
+
+
+== Frequently Asked Questions ==
+
+= Can I directly edit the static HTML file ? =
+Yes, you can directly edit the html file from the plugin static tab.
+
+
+== Changelog ==
+
+= 1.6.0 =
+
+* Initial version
+
+
+== Upgrade Notice ==
+
+Just upgrade via Wordpress.
