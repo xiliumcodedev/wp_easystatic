@@ -8,19 +8,10 @@ if (!defined( 'ABSPATH' ) ) {
    exit;
 }
 
-if(!class_exists('WP_Easystatic_Utils')){
+if(!file_exists('wp-easystatic-utils')){
 	include_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 
 		'includes' . DIRECTORY_SEPARATOR . 'wp-easystatic-utils.php');
 }
-
-if(!class_exists('WP_Easystatic_Generate')){
-	include_once( dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 
-		'includes' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'wp-easystatic-generate.php');
-}
-
-//return your website to dynamic state
-$generate = new WP_Easystatic_Generate();
-$generate->es_rewrite_dynamic();
 
 //remove from wp_options
 $del_opt = [

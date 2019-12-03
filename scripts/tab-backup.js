@@ -34,7 +34,7 @@ requirejs(["jquery", "wp_es_var", "wp_es_func", "wp_es_cm", "wp_es_dt", "wp_es_a
 				var ajax = request(j.ajax);
 				if(j(this).is(":checked")){
 					ajax.send({
-					url : wp_easystatic.url + 'wp-json/'+ wp_easystatic.slug +'/request/static/enable',
+					url : wp_easystatic.url + '/wp-json/'+ wp_easystatic.slug +'/request/static/enable',
 					method : 'post',
 					data : { action : 'easystatic_rewrite_ht', 'static_active_field' : 1},
 					success : function(res){
@@ -43,7 +43,7 @@ requirejs(["jquery", "wp_es_var", "wp_es_func", "wp_es_cm", "wp_es_dt", "wp_es_a
 					});
 				}else{
 					ajax.send({
-					url : wp_easystatic.url + 'wp-json/'+ wp_easystatic.slug +'/request/static/disable',
+					url : wp_easystatic.url + '/wp-json/'+ wp_easystatic.slug +'/request/static/disable',
 					method : 'post',
 					data : { action : 'easystatic_rewrite_ht', 'static_active_field' : 0},
 					success : function(res){

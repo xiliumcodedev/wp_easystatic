@@ -1,55 +1,55 @@
-<?php extract($data); ?>
+<?php $obj = (object) $template ?>
 <div class='wp-easy-container-main'>
 <div class='wp-easy-container-top'>
   <div class='left-side'>
     <div class='form-group'>
-      <p><h2><?= _e('Generated static HTML file:', 'easystatic') ?> <?= $total_static - $total_unstatic . '/' . $total_static ?></h2></p>
+      <p><h2><?= _e('Generated HTML File:', 'easystatic') ?> <?php echo $obj->total_static - $obj->total_unstatic ?></h2></p>
     </div>
 </div>
 <div class='right-side'>
-  <p><h3><?= __('Activate Static Redirection:', 'easystatic') ?></h3></p>
+  <p><h3><?php echo __('Activate Static Redirection:', 'easystatic') ?></h3></p>
   <label class="switch">
-  <input type="checkbox" class='static_activate' <?php echo ($static_enable) ? 'checked' : '' ?>>
+  <input type="checkbox" class='static_activate' <?php echo ($obj->static_enable) ? 'checked' : '' ?> />
   <span class="slider round"></span>
   </label>
-  <p><strong><small><?= __('This will force to override the htaccess to enabled redirection', 'easystatic') ?></small></strong></p>
+  <p><strong><small><?php echo __('This will force to override the htaccess to enabled redirection', 'easystatic') ?></small></strong></p>
 </div>
 </div>
 <div class='es-container'>
   <div class='form-group'>
-  <?= $menu_tab ?>
+  <?php echo $obj->menu_tab ?>
   </div>
-<?php if($tab == 'general'): ?>
+<?php if($obj->tab == 'general'): ?>
   <div class='form-group'>
-  <?= $option_tmpl ?>
+  <?php echo $obj->general_tab ?>
   </div>
-<?php elseif($tab == 'static'): ?>
+<?php elseif($obj->tab == 'static'): ?>
   <div class='form-group'>
-  <?= $static_tab ?>
+  <?php echo $obj->static_tab ?>
   </div>
-<?php elseif($tab == 'import'): ?>
+<?php elseif($obj->tab == 'import'): ?>
 <div class="es-container">
   <div class="es_tpl_content">
     <div class='form-group'>
-    <?= $export_import_tab ?>
+    <?php echo $obj->export_import_tab ?>
     </div>
   </div>
 </div>
-<?php elseif($tab == 'backup'): ?>
+<?php elseif($obj->tab == 'backup'): ?>
 <div class="wp-es-container">
   <div class="es-tpl-content">
     <div class='form-group'>
-    <?= $backup ?>
+    <?php echo $obj->backup_tab ?>
     </div>
   </div>
 </div>
-<?php elseif($tab == 'optimize'): ?>
+<?php elseif($obj->tab == 'optimize'): ?>
 <div class='form-group'>
-  <?= $optimize_tab ?>
+  <?php echo $obj->optimize_tab ?>
 </div>
 <?php else: ?>
 <div class='form-group'>
-  <?= $option_tmpl ?>
+  <?php echo $obj->general_tab ?>
 </div>
 <?php endif; ?>
 </div>

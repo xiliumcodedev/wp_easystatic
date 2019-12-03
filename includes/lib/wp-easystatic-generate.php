@@ -107,6 +107,9 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 			foreach($exclude_urls as $url){
 				$static_mod .= "RewriteRule ^^" . $url . '/? ' . $path . "index.php [L]" . PHP_EOL;
 			}
+
+			//include wp-json from index.php
+			$static_mod .= "RewriteRule ^^wp-json/? " . $path . "index.php [L]" . PHP_EOL;
 		}
 
 		$static_mod .= "</IfModule>\n#End Static Rule";
@@ -129,6 +132,11 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 		$file = fopen(EASYSTATIC_BASE . DIRECTORY_SEPARATOR . '.htaccess', "r");
 		$content = WP_Easystatic_Utils::es_remove_static($file);
 		fclose($file);
+		
+		// if #begin Static Rule is not coded then return false
+		if(empty($content)){
+			return false;
+		}
 
 		$path = WP_Easystatic_Utils::es_domain_path();
 		$split = explode("</IfModule>", str_replace("\n\r", "", $content[0]));

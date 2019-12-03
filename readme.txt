@@ -11,7 +11,7 @@ WP Easystatic make your website increase page load speed via generate and optimi
 
 == Description ==
 
-WP Easystatic makes dynamic page to a static HTML file with just one click. In one click, it scan all the pages/posts, copy the content, and generate HTML file. This plugin has settings to optimize and minify the html, styles, and scripts for additional loading speed performance.
+WP Easystatic makes dynamic page to a static HTML file with just one click. It scans all the pages/posts, copy the content, and generate HTML file. This plugin has settings to optimize and minify the html, styles, and scripts for additional load speed performance.
 
 
 Major features in WP Easystatic include:
@@ -21,6 +21,8 @@ Major features in WP Easystatic include:
 * Minify and Optimize CSS/JS
 * Enable or disable the static redirection
 * Exclude URL from static generator
+* Static directory backup, restore, and delete
+* Import directory backup
 
 
 == Installation ==
@@ -34,7 +36,7 @@ Just install from your WordPress "Plugins > Add New" screen and all will be well
 
 == Screenshots ==
 
-1. screenshot-1.png
+1. screenshot.JPG
 
 
 == Frequently Asked Questions ==

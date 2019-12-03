@@ -65,7 +65,7 @@ var scanning_process = async () => {
 			_var.percent.css('width', ((scan_arr.length / total_count) * 100) + '%')
 			count_em.text(scan_arr.length + "/" + total_count)
 			var _res = res
-			var _txt = 'generating static file for ( ' + _res['title'] + ' )';
+			var _txt = 'Generating HTML ( ' + _res['title'] + ' )';
 			_var.page_log.text(_txt)
 			is_wait_gen = false;
 		})
@@ -121,7 +121,7 @@ var scan_update = async () => {
 			_var.percent.css('width', ((scan_arr.length / total_count) * 100) + '%')
 			count_em.text(scan_arr.length + "/" + total_count)
 			var _res = res
-			var _txt = 'updating changes ( ' + _res['title'] + ' )';
+			var _txt = 'Updating HTML ( ' + _res['title'] + ' )';
 			_var.page_log.text(_txt)
 			if(_res['status'] == 1){
 				ids_update.push(id[0])

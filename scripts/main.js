@@ -17,12 +17,6 @@ requirejs(["jquery", "wp_es_var", "wp_es_scanner", "wp_es_func", "wp_es_cm", "wp
  		var modal_alert = j('body').WPEasyAlert({
 			'backgroundColor' : '#00000047',
 		});
- 		events('click', {
-			elem : refresh,
-			func : function(){
-				dt.refresh(j('#datatable'))
-			}
-		});
 
 		events('change', {
 			elem : vars.static_activate,

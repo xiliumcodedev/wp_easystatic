@@ -29,9 +29,14 @@ class WP_Easystatic_Template{
 
 		$merge = array_merge($default, $atts);
 
-		extract($merge);
+		$attr = "";
+		if(!empty($merge['atts'])){
+			foreach($merge['atts'] as $k => $v){
+				$attr .= $k . "='{$v}'";
+			}
+		}
 
-		echo "<form method={$method} action={$action} {$atts}>";
+		echo "<form method={$merge['method']} action={$merge['action']} {$attr}>";
 	}
 
 	function tpl_close_form(){
@@ -48,9 +53,14 @@ class WP_Easystatic_Template{
 
 		$merge = array_merge($default, $atts);
 
-		extract($merge);
+		$attr = "";
+		if(!empty($merge['atts'])){
+			foreach($merge['atts'] as $k => $v){
+				$attr .= $k . "='{$v}'";
+			}
+		}
 
-		echo "<table class={$class} id={$id} {$atts}>";
+		echo "<table class={$merge['class']} id={$merge['id']} {$attr}>";
 	}
 
 	function tpl_close_table(){
@@ -103,10 +113,10 @@ class WP_Easystatic_Template{
 		?>
 		<div class='console-content'>
 		<div class='content-left'>
-		<button class='generate-static-file' id="start_scan"><?= __('Generate Static', 'easystatic') ?></button>
+		<button class='generate-static-file' id="start_scan"><?php echo __('Generate Static', 'easystatic') ?></button>
 		</div>
 		<div class='content-right'>
-		<button class='check-update-file' id="update_scan"><?= __('Update Static', 'easystatic') ?></button>
+		<button class='check-update-file' id="update_scan"><?php echo __('Update Static', 'easystatic') ?></button>
 		</div>
 		</div>
 		<?php
@@ -116,22 +126,21 @@ class WP_Easystatic_Template{
 		?>
 		<div class='wp-es-row'>
 		<div class='wp-es-col-left'>
-		<strong><?= __('Search Title:', 'easystatic') ?></strong>
+		<strong><?php echo __('Search Title:', 'easystatic') ?></strong>
 		<span><input type='text' id='search-title' /></span>
 		</div>
 		<div class='wp-es-col-right'>
-		<strong><?= __('Show:', 'easystatic') ?></strong>
+		<strong><?php echo __('Show:', 'easystatic') ?></strong>
 		<span><select id="es-select-show">
-			<option value="1">1</option>
-			<option value="2">2</option>
-			<option value="3">3</option>
-			<option value="4">4</option>
-			<option value="5">5</option>
-			<option value="6">6</option>
-			<option value="7">7</option>
+			<option value="5"><?php echo __('5', 'easystatic') ?></option>
+			<option value="10"><?php echo __('10', 'easystatic') ?></option>
+			<option value="20"><?php echo __('20', 'easystatic') ?></option>
+			<option value="30"><?php echo __('30', 'easystatic') ?></option>
+			<option value="40"><?php echo __('40', 'easystatic') ?></option>
+			<option value="50"><?php echo __('50', 'easystatic') ?></option>
 			</select>
 		</span>
-		<button id="refresh"><?= __('Refresh', 'easystatic') ?></button>
+		<!-- <button id="refresh"><?php echo __('Refresh', 'easystatic') ?></button> -->
 		</div>
 		</div/>
 		<?php
@@ -141,15 +150,15 @@ class WP_Easystatic_Template{
 		?>
 		<h2 class="nav-tab-wrapper">  
 		    <a href="?page=<?php echo EASYSTASTIC_SLUG ?>&tab=general" class="nav-tab">
-		    	<?= __('General', 'easystatic') ?></a>  
+		    	<?php echo __('General', 'easystatic') ?></a>  
 		    <a href="?page=<?php echo EASYSTASTIC_SLUG ?>&tab=static" class="nav-tab">
-		    	<?= __('Static Files', 'easystatic') ?></a>
+		    	<?php echo __('Static', 'easystatic') ?></a>
 		    <a href="?page=<?php echo EASYSTASTIC_SLUG ?>&tab=backup" class="nav-tab">
-		    	<?= __('Backup', 'easystatic') ?></a>
+		    	<?php echo __('Backup', 'easystatic') ?></a>
 		    <a href="?page=<?php echo EASYSTASTIC_SLUG ?>&tab=import" class="nav-tab">
-		    	<?= __('Import', 'easystatic') ?></a>
+		    	<?php echo __('Import', 'easystatic') ?></a>
 		    <a href="?page=<?php echo EASYSTASTIC_SLUG ?>&tab=optimize" class="nav-tab">
-		    	<?= __('Optimize', 'easystatic') ?></a>
+		    	<?php echo __('Optimize', 'easystatic') ?></a>
 		</h2>
 		<?php
 	}
@@ -183,9 +192,9 @@ class WP_Easystatic_Template{
 		ob_start();
 		
 		?>
-		<a href='#TB_inline?&width=600&height=550&inlineId=static-file-modal' data-id="<?= $page->ID ?>" class='stat_edit_file thickbox'><?= __('Edit', 'easystatic') ?></a>
-		<a href='javascript:void(0)' data-id="<?= $page->ID ?>" class='stat_remove_file'><?= __('Remove', 'easystatic') ?></a>
-		<a href='#TB_inline?&width=600&height=550&inlineId=static-file-update' data-id="<?= $page->ID ?>" class='stat_update_file thickbox'><?= __('Update', 'easystatic') ?></a>
+		<a href='#TB_inline?&width=600&height=550&inlineId=static-file-modal' data-id="<?php echo $page->ID ?>" class='stat_edit_file thickbox'><?php echo __('Edit', 'easystatic') ?></a>
+		<a href='javascript:void(0)' data-id="<?php echo $page->ID ?>" class='stat_remove_file'><?php echo __('Remove', 'easystatic') ?></a>
+		<a href='#TB_inline?&width=600&height=550&inlineId=static-file-update' data-id="<?php echo $page->ID ?>" class='stat_update_file thickbox'><?php echo __('Update', 'easystatic') ?></a>
 		<?php
 
 		return ob_get_clean();
@@ -200,7 +209,7 @@ class WP_Easystatic_Template{
 			 <div class='top-modal'>
 			 <h3 class='edit-title'></h3>
 			 <div class='btn-modal'>
-			 <button id="save-source" class="button button-primary"><?= __('Save', 'easystatic') ?></button>
+			 <button id="save-source" class="button button-primary"><?php echo __('Save', 'easystatic') ?></button>
 			 </div>
 			 </div>
 		     <textarea id="code-static-load" style="width:100%;height:100%;"></textarea>
@@ -209,8 +218,8 @@ class WP_Easystatic_Template{
 			 <div class='top-modal'>
 			 <h3 class='update-title'></h3>
 			 <div class='btn-modal'>
-			 	<button id="static-paste-update" class="button button-primary"><?= __('Paste Dynamic Content', 'easystatic') ?></button>
-			 <button id="static-merge-update" class="button button-primary"><?= __('Update', 'easystatic') ?></button>
+			 	<button id="static-paste-update" class="button button-primary"><?php echo __('Paste Dynamic Content', 'easystatic') ?></button>
+			 <button id="static-merge-update" class="button button-primary"><?php echo __('Update', 'easystatic') ?></button>
 			 </div>
 			</div>
 		     <div id="static-update-view"></div>
@@ -224,8 +233,8 @@ class WP_Easystatic_Template{
 		?>
 		<div class='es-button-group'>
 			<div class='form-group'>
-			<button class='generate-static-file' id="create_backup"><?= __('Create Backup', 'easystatic') ?></button>
-			<div id='es-loader'><span><img src="<?php echo EASYSTATIC_URL ?>/assets/images/loader.gif" width="50px" /></span></div>
+				<div id='es-loader'><span><img src="<?php echo EASYSTATIC_URL ?>/assets/images/loader.gif" width="50px" /></span></div>
+			<button class='generate-static-file' id="create_backup"><?php echo __('Create Backup', 'easystatic') ?></button>
 			</div>
 		</div>
 		<?php
@@ -235,15 +244,25 @@ class WP_Easystatic_Template{
 	function tpl_partial_import_field(){
 
 		?>
-
-		<form method="post" enctype="multipart/form-data">
-		<?php wp_nonce_field( 'es-file-upload', 'es-file-upload-field' ); ?>
-		<input type='file' name='es-file-import' id='es-file-import'/>
-		<button class='button button-primary'><?= __('Go', 'easystatic') ?></button>
-		</form>
-
+		<div class='static-console-wrapper'>
+			<form method="post" enctype="multipart/form-data">
+				<?php wp_nonce_field( 'es-file-upload', 'es-file-upload-field' ); ?>
+				<input type='file' name='es-file-import' id='es-file-import'/>
+				<button class='button button-primary'><?php echo __('Go', 'easystatic') ?></button>
+			</form>
+		</div>
 		<?php
 
+	}
+
+	function es_dashboard_notice(){
+		$errors = (array) get_settings_errors('easystatic_notice', true);
+		if(is_array($errors)){
+			if(isset($errors[0]['message'])){
+				echo "<div class=\"notice notice-info is-dismissible\">
+					<p>" . __("Go to static tab and generate HTML file", "easystatic") . "</p></div>";
+			}
+		}
 	}
 
 	function es_setting_baseurl_field( $param ) {

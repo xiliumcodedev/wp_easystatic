@@ -21,23 +21,33 @@ class WP_Easystatic_Components{
 		$this->template = new WP_Easystatic_Template();
 	}
 
-	function easystatic_template($data = array()){
+	function get_es_generate(){
+		if(!isset($this->generate)){
+			return false;
+		}
+		return $this->generate;
+	}
 
-		if(!array_key_exists('template', $data)){
+	function get_es_template(){
+		if(!isset($this->template)){
+			return false;
+		}
+		return $this->template;
+	}
+
+	function easystatic_template($template = array()){
+
+		if(!array_key_exists('template', $template)){
 			return false;
 		}
 		
-		if(is_array($data)){
-			extract($data);
-		}
-		
-		$file = file_exists(EASYSTATIC_DIR . $template );
+		$file = file_exists(EASYSTATIC_DIR . $template['template'] );
 
 		if(!$file){
 			return false;
 		}
 
-		include(EASYSTATIC_DIR . $template );
+		include(EASYSTATIC_DIR . $template['template'] );
 
 	}
 
@@ -319,7 +329,7 @@ class WP_Easystatic_Components{
 
 		settings_fields( 'wp_easystatic' );
 		do_settings_sections( 'wp_easystatic' );
-		submit_button('submit');
+		submit_button('Save Changes', 'primary', 'save_changes');
 
 		$this->template->tpl_close_form();
 
@@ -369,6 +379,10 @@ class WP_Easystatic_Components{
 					<td>{$sublink}</td>
 					<td>{$action_link}</td>";
 		}, $static);
+		
+		if(empty($td_content)){
+			$td_content[] = "<td></td><td></td><td>Empty Table</td><td></td><td></td>";
+		}
 
 		$this->template->tpl_table_body($td_content);
 		$this->template->tpl_close_table();
@@ -410,6 +424,10 @@ class WP_Easystatic_Components{
 
 		}, $files);
 
+		if(empty($td_content)){
+			$td_content[] = "<td></td><td></td><td>Empty Table</td><td></td><td></td><td></td>";
+		}
+
 		$this->template->tpl_table_body($td_content);
 		$this->template->tpl_close_table();
 
@@ -447,13 +465,18 @@ class WP_Easystatic_Components{
 
 		$this->template->tpl_open_form([
 			'method' => 'POST',
-			'action' => 'options.php'
+			'action' => 'options.php',
+			'atts' => [
+				'id' => 'es_optimize_form'
+			]
 		]);
 
 		settings_fields( 'static_minify' );
 		do_settings_sections( 'static_minify' );
-		submit_button('submit');
-
+		echo "<p class='submit'>";
+		submit_button('Save Changes', 'primary', 'save_changes', false);
+		submit_button('Clear Cache', 'large', 'clear_cache', false);
+		echo "</p>";
 		$this->template->tpl_close_form();
 
 		$tab_template = ob_get_clean();

@@ -385,22 +385,16 @@ function WPEasyDT_Plug(){
 
 
 	this.refresh = function(dt){
-		_tbody = tbody.clone();
-		settings.current = 0;
-		settings.max_rows = 2;
-		btn_start = 0;
-		btn_limit = 5;
 		$this.redraw();
 		footer_btns();
 	}
-
 
 }
 
 j.fn.WPEasyDT = function( options ){
 
 	 var settings = j.extend({
-            max_rows: 2,
+            max_rows: 5,
             current: 0
      }, options );
 

@@ -162,6 +162,22 @@ static function es_lists_ids(&$lists = []){
 	return array_splice($lists, count($lists) - 1, count($list), $list);
 }
 
+// sanitize settings field
+static function es_sanitize_settings( $opt ){
+	foreach( $opt as $k => $v ) {
+        if( isset( $opt[$k] ) ) {
+            $opt[$k] = strip_tags(stripslashes($opt[$k]));
+        }
+	}
+	return $opt;
+}
+
+static function es_remove_admin_notice(){
+	if($_GET['page'] == 'easystatic'){
+		remove_all_actions('admin_notices');
+	}
+}
+
 /*
 	Collect id from post
 */
