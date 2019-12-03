@@ -471,7 +471,7 @@ class WP_Easystatic_Function{
 			if(file_exists($cache_path)){
 				$dirs = array('css', 'js');
 				foreach($dirs as $dir){
-				$files = WP_Easystatic_Utils::es_list_directory($cache_path . DIRECTORY_SEPARATOR . $dir);
+				$files = scandir($cache_path . DIRECTORY_SEPARATOR . $dir);
 					foreach($files as $file){
 						preg_match('/.*(\.)+$/', $file, $match, PREG_OFFSET_CAPTURE);
 						if(!$match){
