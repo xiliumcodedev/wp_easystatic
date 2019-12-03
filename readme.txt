@@ -36,8 +36,9 @@ Just install from your WordPress "Plugins > Add New" screen and all will be well
 
 == Screenshots ==
 
-1. screenshot.JPG
-
+1. screenshot1.JPG
+2. screenshot2.JPG
+3. screenshot3.JPG
 
 == Frequently Asked Questions ==
 
