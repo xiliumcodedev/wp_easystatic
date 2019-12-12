@@ -21,8 +21,14 @@ j.noConflict();
 var scan = Scanner(j)
 var is_wait_gen = false;
 var is_wait_update = false;
+
 var scanning_process = async () => {
-	
+
+	if(is_wait_update){
+		alert('Please wait for HTML update to completed.');
+		return;
+	}
+
 	t = setTimeout(scanning_process, 2000)
 	var count_em = _var.console_wrapper.find('#count-em')
 
@@ -33,7 +39,7 @@ var scanning_process = async () => {
 			var json = res[0]
 			is_init = json['init'];
 			if(!is_init){
-				alert('please select post to convert');
+				alert('please select post type to convert');
 				clearTimeout(t);
 				return false
 			}
@@ -76,6 +82,11 @@ var scanning_process = async () => {
 exports.scanning_process = scanning_process
 
 var scan_update = async () => {
+
+	if(is_wait_gen){
+		alert('Please wait for HTML generate to completed.');
+		return;
+	}
 
 	t = setTimeout(scan_update, 2000)
 	var count_em = _var.console_wrapper.find('#count-em')
@@ -121,12 +132,21 @@ var scan_update = async () => {
 			_var.percent.css('width', ((scan_arr.length / total_count) * 100) + '%')
 			count_em.text(scan_arr.length + "/" + total_count)
 			var _res = res
-			var _txt = 'Updating HTML ( ' + _res['title'] + ' )';
+			var _txt = "";
+
+			if(typeof _res['error'] === 'undefined'){
+				_txt = 'Updating HTML ( ' + _res['title'] + ' )';
+			}else{
+				_txt = res['error'];
+			}
 			_var.page_log.text(_txt)
 			if(_res['status'] == 1){
 				ids_update.push(id[0])
 			}
 		})
+		.catch(function(error){
+			_var.page_log.text(error);
+		});
 	}
 }
 

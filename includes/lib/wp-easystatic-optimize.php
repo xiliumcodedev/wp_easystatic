@@ -1,5 +1,7 @@
 <?php
 
+DEFINE('EASYSTASTIC_CACHE', "/cache/". EASYSTASTIC_SLUG);
+
 /*
 	This class is use to optimize HTML content
 */
@@ -13,7 +15,7 @@ class WP_Easystatic_Optimize{
 	check if cache diretory is created
 */
 function check_cache_directory(){
-	$cache =  WP_CONTENT_DIR . "/cache/wp-easystatic";
+	$cache =  WP_CONTENT_DIR . EASYSTASTIC_CACHE;
 
 	if(!file_exists($cache)){
 		mkdir($cache, 0777, true);
@@ -101,7 +103,9 @@ function cache_minified( $content, $type, $id ){
 	wrapper to filter the style from HTML ouput
 */
 function filtered_css_codes( &$content, $exclude = false ){
+
 	$split = explode('</head>', $content, 2);
+
 	$head = $split[0];
 	$body = $split[1];
 	$default_exclude = array(
@@ -156,10 +160,10 @@ function filtered_js_codes( &$content, $exclude = false ){
 		 );
 
 	$scripts = [];
-	if (preg_match_all( '#<script.*</script>#Usmi', $content, $matches ) ){
+	if (preg_match_all( '#<script.*</script>#Usmi', $content, $matches)){
 		foreach ( $matches[0] as $tag ) {
 			$is_exclude = false;
-			if(count($exclude)){
+			if(is_array($exclude)){
 				foreach($exclude as $e){
 					if(empty($e)){
 						continue;
@@ -207,6 +211,34 @@ function inject_cache_file( $file, $content, $forcehead ){
 }
 
 /*
+	method formatting html
+*/
+function es_format_html($content){
+	
+	$strip_content = stripslashes_deep($content);
+
+	$dom = new DOMDocument();
+	@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED);
+	@$dom->preserveWhiteSpace = false; 
+	@$dom->formatOutput = true;
+	return @$dom->saveHTML();
+
+}
+
+/*
+	removing any scripts and styles in page
+*/
+function es_content_sanitize( $content ){
+
+	$content_split = preg_split("/\<body (.*)([^>])/", $content);
+	$remove_js = preg_replace('#<script.*</script>#Usmi', "", $content_split[1]);
+	$content = preg_replace("/\<\/body.*[^>].*/", "", $remove_js);
+	$content = stripslashes_deep(wp_filter_post_kses($content));
+
+	return $content;
+}
+
+/*
 	start to optimize
 */
 function wp_easystatic_jscss_buffer( $content, $post ){
@@ -219,7 +251,7 @@ function wp_easystatic_jscss_buffer( $content, $post ){
 		$minify = $this->minify_css($codes);
 		$cache = apply_filters('easystatic_minify_cache', $minify, 'css');
 		$file = $this->cache_minified($cache, 'css', $post->ID);
-		$inject = apply_filters('easystastic_url_inject', "<link id='easystatic_css' rel='preload' as='style' href=\"" . EASYSTATIC_CONTENT . '/cache/wp-easystatic/css/' . $file . "\" media='all' onload=\"this.onload=null;this.rel='stylesheet'\"/>");
+		$inject = apply_filters('easystastic_url_inject', "<link id='easystatic_css' rel='preload' as='style' href=\"" . EASYSTATIC_CONTENT . EASYSTASTIC_CACHE .'/css/' . $file . "\" media='all' onload=\"this.onload=null;this.rel='stylesheet'\"/>");
 		if($is_critical_css){
 			$inline_css = get_option("static_critical_css");
 			$inline_minify = $this->minify_css($inline_css);
@@ -237,7 +269,7 @@ function wp_easystatic_jscss_buffer( $content, $post ){
 		$minify = $this->minify_js($codes);
 		$cache = apply_filters('easystatic_minify_cache', $minify, 'js');
 		$file = $this->cache_minified($cache, 'js', $post->ID);
-		$inject = apply_filters('easystastic_url_inject', "<script defer src=\"" . WP_CONTENT_URL . '/cache/wp-easystatic/js/' . $file . "\" ></script>");
+		$inject = apply_filters('easystastic_url_inject', "<script defer src=\"" . EASYSTATIC_CONTENT . EASYSTASTIC_CACHE .'/js/' . $file . "\" ></script>");
 		$content = $this->inject_cache_file($inject, $content, false);
 	}
 

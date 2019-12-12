@@ -26,17 +26,15 @@ abstract class WP_Easystatic_Request implements WP_Easystatic_Impl{
 	function es_init($field = [], $is_update = false){
 		
 		$lists = [];
-
-		if(in_array('page', $field) && !$is_update){
-			WP_Easystatic_Utils::es_pages($lists);
+		if(!$is_update){
+			foreach($field as $post_type){
+				WP_Easystatic_Utils::es_pages($lists, $post_type);
+			}
 		}
-		
-		if(in_array('post', $field) && !$is_update){
-			WP_Easystatic_Utils::es_posts($lists);
-		}
-
-		if($is_update){
-			WP_Easystatic_Utils::es_lists_ids($lists);
+		else{
+			foreach($field as $post_type){
+				WP_Easystatic_Utils::es_lists_ids($lists, $post_type);
+			}
 		}
 
 		return $lists;
@@ -134,7 +132,7 @@ abstract class WP_Easystatic_Request implements WP_Easystatic_Impl{
 	/*
 		wrapper to retrieve HTML directory and write in HTACESS
 	*/
-	function static_rewrite_ht(&$static_mod = "", $exclude = ""){
+	function static_rewrite_ht(&$static_mod = "", $exclude = []){
 		global $directory;
 
 		$root = EASYSTATIC_BASE . '/' . $this->basedir;
@@ -171,13 +169,14 @@ abstract class WP_Easystatic_Request implements WP_Easystatic_Impl{
 		wrapper for server response
 	*/
 	function _server_response( $data, $options = []){
-
-		if(empty($data)){
-			return new WP_Error("es_404", "Your data is empty", true);
-		}
-
+		
 		$status = 200;
 		$headers = ['Content-Type' => 'application/json'];
+
+		if(array_key_exists('error', $data)){
+			$status = $data['error']->get_error_code();
+			$data['error'] = $data['error']->get_error_message( $status );
+		}
 
 		if(array_key_exists("status", $options)){
 			$status = $options['status'];

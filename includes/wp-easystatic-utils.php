@@ -85,78 +85,87 @@ static function es_extracting_zip($file){
 	wrapper for CURL request
 */
 static function es_get_sitecontent($url){
-	$curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL, $url);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($curl, CURLOPT_HEADER, false);
-	$content = curl_exec($curl);
-	curl_close($curl);
-	return $content;
-}
+	$response = wp_remote_get($url);
+	
+	if(empty($response)){
+		return false;
+	}
 
+	$status = wp_remote_retrieve_response_code($response);
+	$header = wp_remote_retrieve_header($response, 'content-type');
+	$body = wp_remote_retrieve_body($response);
 
-/*
-	Retrieve all scanned pages
-*/
-static function es_pages(&$lists = []){
-	$pages = get_pages([
-		'post_type' => 'page',
-		'post_status' => 'publish'
-	]);
-	
-	$list = array_map(function($v){
-		return $v->ID;
-	}, $pages);
-	
-	$opt = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings("wp_static_page", []));
-	
-	if(array_key_exists('page', $opt)){
-		$list = array_diff($list, $opt['page']);
+	$content = ['content' => '', 'error' => ''];
+	switch ($status) {
+		case 301:
+			$content['error'] = 'Resource was moved permanently';
+			break;
+		case 302:
+			$content['error'] = 'Resource was moved temporarily';
+			break;
+		case 403:
+			$content['error'] = 'Forbidden – Usually due to an invalid authentication';
+			break;
+		case 404:
+			$content['error'] = 'Resource not found: ' . $url;
+			break;
+		case 500:
+			$content['error'] = 'Internal server error';
+			break;
+		case 503:
+			$content['error'] = 'Service unavailable';
+			break;
+		default:
+			$content['content'] = $body;
+			break;
 	}
 	
-	return array_splice($lists, count($lists) - 1, count($list), $list);
+	if(!empty($content['error'])){
+		$content['content'] = "<html><head></head><body>".$content['error']."</body></html>";
+	}
+
+	return $content['content'];
 }
 
+
 /*
-	Retrieve all scanned posts
+	Get pages, post, and registered post
 */
-static function es_posts(&$lists = []){
-	$posts = get_posts([
+static function es_pages(&$lists = [], $post_type = 'page'){
+	$pages = get_posts([
+		'post_type' => $post_type,
 		'posts_per_page' => -1,
 		'post_status' => 'publish'
 	]);
 	
 	$list = array_map(function($v){
-		return $v->ID;
-	}, $posts);
+		return absint($v->ID);
+	}, $pages);
 
-	$opt = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings("wp_static_page", []));
+	$list = wp_parse_id_list($list);
 	
-	if(array_key_exists('post', $opt)){
-		$list = array_diff($list, $opt['post']);
-	}
+	$opt = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings("wp_static_page", []));
 
+	if(array_key_exists($post_type, $opt)){
+		$list = array_diff($list, $opt[$post_type]);
+	}
+	
 	return array_splice($lists, count($lists) - 1, count($list), $list);
 }
 
 /*
-	Retrieve all scanned pages/posts
+	Retrieve all scanned pages, post, and registered post
 */
-static function es_lists_ids(&$lists = []){
+static function es_lists_ids(&$lists = [], $post_type = 'page'){
 
 	$opt = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings("wp_static_page", []));
 	
 	if(!is_array($opt))
 		return false;
 
-	if(array_key_exists('page', $opt)){
-		$list = array_merge($lists, $opt['page']);
-	}
-
-	if(array_key_exists('post', $opt)){
-		$list = array_merge($lists, $opt['post']);
+	$list = [];
+	if(array_key_exists($post_type, $opt)){
+		$list = array_merge($lists, $opt[$post_type]);
 	}
 
 	return array_splice($lists, count($lists) - 1, count($list), $list);
@@ -172,10 +181,68 @@ static function es_sanitize_settings( $opt ){
 	return $opt;
 }
 
-static function es_remove_admin_notice(){
-	if($_GET['page'] == 'easystatic'){
-		remove_all_actions('admin_notices');
+// sanitize post data
+static function es_sanitize_post( $args ){
+
+	$post = sanitize_post( get_post( $args ), 'OBJECT', 'raw' );
+
+	if(is_wp_error($post)){
+		return false;
 	}
+
+	return $post;
+
+}
+
+/*
+	content is cleaned before when updating the static html file
+*/
+static function es_safe_content( $content, $data = [] ){
+
+	$content_split = explode("</head>", $content, 2);
+
+	$scripts = [];
+	if (preg_match_all( '#<script.*</script>#Usmi', $content_split[1], $matches)){
+		foreach ( $matches[0] as $tag ) {
+			$scripts[] = $tag;
+		}
+	}
+
+	$content = stripslashes_deep(wp_filter_post_kses($data['content']));
+
+	//returning all scripts into footer
+	foreach($scripts as $script){
+		$content .= $script . "\n\r";
+	}
+
+	preg_match("/\<body (.*)([^>])/", $content_split[1], $body);
+
+	$content = current($content_split) . "</head>" . current($body) . $content . "</body></html>";
+
+	return $content;
+}
+
+static function es_filter_input( $type, $name ){
+	return filter_input( $type, $name, FILTER_UNSAFE_RAW) || null;
+}
+
+static function es_remove_admin_notice(){
+	remove_all_actions('admin_notices');
+}
+
+static function es_panelurl_tab(){
+	global $wp;
+
+	if(!isset($wp)){
+		return;
+	}
+
+	$url = esc_url( add_query_arg( $wp->query_vars, $wp->request ));
+	$url = str_replace('038;', '', $url);
+	$url = wp_parse_url($url, PHP_URL_FRAGMENT);
+	wp_parse_str($url, $output);
+
+	return $output;
 }
 
 /*
@@ -279,7 +346,7 @@ static function es_scanned_page($type = false){
 		}
 		$posts = [];
 		foreach($ids[$type] as $id){
-			$posts[] = get_post($id);
+			$posts[] = WP_Easystatic_Utils::es_sanitize_post($id);
 		}
 		return $posts;
 	}

@@ -12,6 +12,7 @@ requirejs.config({
 						rq_init : base_url + '/request/ids/init',
 						rq_dir :  base_url + '/request/ids/directories',
 						rq_scan : base_url + '/request/ids/read',
+						rq_update_init : base_url + '/request/ids/init_update',
 						rq_edit : base_url + '/request/static/edit',
 						rq_remove : base_url + '/request/static/remove',
 						rq_review : base_url + '/request/static/review',

@@ -24,7 +24,6 @@ class WP_Easystatic_Function{
 		add_action('save_post', array($this, 'wp_easystatic_update_static'), 10, 3);
 		register_activation_hook( EASYSTASTIC_FILE, array($this, 'es_onactivation'));
 		register_deactivation_hook( EASYSTASTIC_FILE, array($this, 'es_deactivation') );
-
 	}
 
 	/*
@@ -64,7 +63,7 @@ class WP_Easystatic_Function{
 	function es_onactivation(){
 		$dirs = array(
 			EASYSTATIC_CONTENT_DIR . DIRECTORY_SEPARATOR . "static-backup",
-			EASYSTATIC_CONTENT_DIR . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "wp-easystatic",
+			EASYSTATIC_CONTENT_DIR . DIRECTORY_SEPARATOR . "cache" . DIRECTORY_SEPARATOR . "easystatic",
 			EASYSTATIC_BASE . DIRECTORY_SEPARATOR . WP_Easystatic_Utils::es_option_settings('static_directory', 'generate-files')
 		);
 
@@ -117,23 +116,24 @@ class WP_Easystatic_Function{
 
 		if($current_screen->id == "settings_page_" . EASYSTASTIC_SLUG){
 
-			$tab = isset($_GET['tab']) ? $_GET['tab'] : false;
-
-			if($tab == "static"){
-				wp_enqueue_script( 'wp_easystatic-require-js', plugins_url( 'scripts/require.js' , __FILE__ ), array(), '0.1' );
-				wp_localize_script( 'wp_easystatic-require-js', 'wp_easystatic', array('url' => site_url(), 'baseUrl' => plugins_url('scripts', __FILE__), 'tab' => 'static', 'slug' => EASYSTASTIC_SLUG
-	        	));
-			}
-			else if($tab == "backup"){
-				wp_enqueue_script( 'wp_easystatic-backup-require-js', plugins_url( 'scripts/require.js' , __FILE__ ), array(), '0.1' );
-
-				wp_localize_script( 'wp_easystatic-backup-require-js', 'wp_easystatic', array('url' => site_url(), 'baseUrl' => plugins_url('scripts', __FILE__), 'tab' => 'backup', 'slug' => EASYSTASTIC_SLUG
-	        	));
-			}
-			else{
-				wp_enqueue_script( 'wp_easystatic-activate-js', plugins_url( 'scripts/wp-es-activate.js' , __FILE__ ), array(), '0.1' );
-				wp_localize_script( 'wp_easystatic-activate-js', 'wp_easystatic', array('url' => site_url(), 'slug' => EASYSTASTIC_SLUG
-	        	));
+			$panel = WP_Easystatic_Utils::es_panelurl_tab();
+			$tab = trim(sanitize_key( (isset($panel['tab']) ? $panel['tab'] : '') ));
+			switch ($tab) {
+				case 'static':
+					wp_enqueue_script( 'wp_easystatic-require-js', plugins_url( 'scripts/require.js' , __FILE__ ), array(), '0.1' );
+					wp_localize_script( 'wp_easystatic-require-js', 'wp_easystatic', array('url' => site_url(), 'baseUrl' => plugins_url('scripts', __FILE__), 'tab' => 'static', 'slug' => EASYSTASTIC_SLUG
+		        	));
+					break;
+				case 'backup' :
+					wp_enqueue_script( 'wp_easystatic-backup-require-js', plugins_url( 'scripts/require.js' , __FILE__ ), array(), '0.1' );
+					wp_localize_script( 'wp_easystatic-backup-require-js', 'wp_easystatic', array('url' => site_url(), 'baseUrl' => plugins_url('scripts', __FILE__), 'tab' => 'backup', 'slug' => EASYSTASTIC_SLUG
+		        	));
+		        	break;
+				default:
+					wp_enqueue_script( 'wp_easystatic-activate-js', plugins_url( 'scripts/wp-es-activate.js' , __FILE__ ), array(), '0.1' );
+					wp_localize_script( 'wp_easystatic-activate-js', 'wp_easystatic', array('url' => site_url(), 'slug' => EASYSTASTIC_SLUG
+		        	));
+					break;
 			}
 		}
 	}
@@ -142,13 +142,17 @@ class WP_Easystatic_Function{
 		load all js script via requiresjs configuation
 	*/
 	function es_requirejs_init($tag, $handle, $src){
+		switch ($handle) {
+			case 'wp_easystatic-require-js':
+				$tag = '<script type="text/javascript" data-main="'. EASYSTATIC_URL .'scripts/config" src="' . esc_url( $src ) . '" ></script>';
+				break;
+			case 'wp_easystatic-backup-require-js':
+				$tag = '<script type="text/javascript" data-main="'. EASYSTATIC_URL .'scripts/tab-backup-config" src="' . esc_url( $src ) . '" ></script>';
+				break;
+			default:
+				break;
 
-		if($handle == 'wp_easystatic-require-js'){
-			$tag = '<script type="text/javascript" data-main="'. EASYSTATIC_URL .'scripts/config" src="' . esc_url( $src ) . '" ></script>';
-		}else if($handle == 'wp_easystatic-backup-require-js'){
-			$tag = '<script type="text/javascript" data-main="'. EASYSTATIC_URL .'scripts/tab-backup-config" src="' . esc_url( $src ) . '" ></script>';
 		}
-
 		return $tag;
 	}
 
@@ -182,11 +186,9 @@ class WP_Easystatic_Function{
 			array(
 				'field' => 'static_page_field',
 				'id' => 'static_page_field',
-				'type' => array(
-					'page',
-					'post',
-					'post_type'
-			)
+				'post_type' => get_post_types(
+					['public' => true]
+				)
 		));
 
 
@@ -318,13 +320,13 @@ class WP_Easystatic_Function{
 		main plugin page
 	*/
 	function init_template(){
-		
+
+		$panel = WP_Easystatic_Utils::es_panelurl_tab();
 		$template['template'] = '/includes/wp-easystatic-page.php';
-		$template['tab'] = isset($_GET['tab']) ? $_GET['tab'] : "general";
-		
+		$template['tab'] = sanitize_key((isset($panel['tab']) ? trim($panel['tab']) : ''));
 		$template['static_enable'] = $this->component->static_redirect_code(new WP_Easystatic_Generate());
-		$template['total_static'] = $this->component->count_static_generated();
-		$template['total_unstatic'] = $this->component->count_unstatic();
+		$template['total_static'] = $this->component->count_static_generated(0);
+		$template['total_unstatic'] = $this->component->count_unstatic(0);
 		$template['menu_tab'] = $this->component->_tab_menu();
 		$template['general_tab'] = $this->component->_tab_general_view();
 		$template['static_tab'] = $this->component->_tab_static_view();
@@ -377,7 +379,9 @@ class WP_Easystatic_Function{
 	}
 
 	function es_remove_notice(){
-		WP_Easystatic_Utils::es_remove_admin_notice();
+		if(WP_Easystatic_Utils::es_filter_input(INPUT_GET, 'page') === 'easystatic'){
+			WP_Easystatic_Utils::es_remove_admin_notice();
+		}
 	}
 
 	/*
@@ -454,6 +458,10 @@ class WP_Easystatic_Function{
 	function es_optimize_update($values, $option_name, $old){
 
 		$option = get_option($option_name);
+		$setting = 'easystatic_notice';
+		$setting_code = esc_attr( 'settings_updated_notice' );
+		$setting_msg = __("Settings saved and cache is empty.", "easystatic");
+		$setting_type = "updated";
 
 		if($option == false){
 		
@@ -466,8 +474,8 @@ class WP_Easystatic_Function{
 		
 		}
 
-		if(isset($_POST['clear_cache'])){
-			$cache_path = EASYSTATIC_BASE . DIRECTORY_SEPARATOR . "wp-content" . DIRECTORY_SEPARATOR . "/cache/wp-easystatic";
+		if(WP_Easystatic_Utils::es_filter_input(INPUT_POST, 'clear_cache')){
+			$cache_path = EASYSTATIC_BASE . DIRECTORY_SEPARATOR . "wp-content" . DIRECTORY_SEPARATOR . "/cache/" . EASYSTASTIC_SLUG;
 			if(file_exists($cache_path)){
 				$dirs = array('css', 'js');
 				foreach($dirs as $dir){
@@ -480,6 +488,8 @@ class WP_Easystatic_Function{
 					}
 				}
 			}
+			
+			add_settings_error($setting, $setting_code, $setting_msg, $setting_type);
 		}
 	}
 

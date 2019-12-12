@@ -87,7 +87,7 @@ function Scanner(j){
 					resolve(res)
 				},
 				error : function(xhr, status, err){
-					reject(status)
+					reject(xhr.responseText)
 				}
 			})
 		})

@@ -7,11 +7,14 @@ if (!defined( 'ABSPATH' ) ) {
 class WP_Easystatic_Generate extends WP_Easystatic_Request{
 	
 	/**
-	*  Retrieve URL and return full content
+	*  Retrieve URL and return full content WP_Post
 	*  @return url content
 	*/
 	function es_read($post){
-
+		$status = array('future', 'draft', 'pending', 'private', 'trash', 'auto-draft');
+		if(in_array($post->post_status, $status)){
+			return new WP_Error(200, "Please publish your {$post->post_type}: {$post->post_title}, skipping...", true);
+		}
 		$link = get_permalink($post->ID);
 		$content = WP_Easystatic_Utils::es_get_sitecontent($link);
 		return $content;
@@ -31,8 +34,7 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 		@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED);
 		@$dom->preserveWhiteSpace = false; 
 		@$dom->formatOutput = true;
-
-		return $content;
+		return @$dom->saveHTML();
 		
 	}
 
@@ -74,7 +76,7 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 		@$dom->loadHTML($strip_content, LIBXML_HTML_NOIMPLIED);
 		@$dom->preserveWhiteSpace = false; 
 		@$dom->formatOutput = true;
-		return $strip_content;
+		return @$dom->saveHTML();
 	}
 
 	/*
@@ -102,14 +104,14 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 		$static_mod = "\r\n#begin Static Rule\n<IfModule mod_rewrite.c>\r\n";
 		$this->static_rewrite_ht($static_mod, $exclude_urls);
 
+		$path = WP_Easystatic_Utils::es_domain_path();
+		//include wp-json from index.php
+		$static_mod .= "RewriteRule ^^wp-json/? " . $path . "index.php [L]" . PHP_EOL;
+		
 		if(!empty($exclude_urls)){
-			$path = WP_Easystatic_Utils::es_domain_path();
 			foreach($exclude_urls as $url){
 				$static_mod .= "RewriteRule ^^" . $url . '/? ' . $path . "index.php [L]" . PHP_EOL;
 			}
-
-			//include wp-json from index.php
-			$static_mod .= "RewriteRule ^^wp-json/? " . $path . "index.php [L]" . PHP_EOL;
 		}
 
 		$static_mod .= "</IfModule>\n#End Static Rule";

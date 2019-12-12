@@ -224,32 +224,34 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	function es_scan_static(){
 
 		$root = EASYSTATIC_BASE . '/' . WP_Easystatic_Utils::es_option_settings('static_directory', 'generate-files');
-		$static = WP_Easystatic_Utils::es_list_directory($root);
+		$data = WP_Easystatic_Utils::es_list_directory($root);
 
-		if(empty($static)){
-			return new WP_Error("es_404", "You have an empty directory", true);
+		if(empty($data)){
+			$data['error'] = new WP_Error(200, "You have an empty directory", true);
 		}
 
-		return $this->generate->_server_response($static);
+		return $this->generate->_server_response($data);
 	}
 
 	function es_ids_read( $data ){
-		$id = sanitize_text_field(esc_html($data['page_id'] ));
-		$post = get_post($id);
-		$content = stripslashes_deep($this->generate->es_read($post));
-		if(empty($content)){
-			return new WP_Error("es_404", "You have an empty content", true);
+		$id = sanitize_key(esc_html($data['page_id'] ));
+		$post = WP_Easystatic_Utils::es_sanitize_post($id);
+		$read = stripslashes_deep($this->generate->es_read($post));
+		if(is_wp_error($read)){
+			$response['error'] = $read;
 		}
-		update_option("wp_static_page", maybe_serialize(WP_Easystatic_Utils::es_options($post)));
-		$link = $this->generate->es_static_subdirectory($post);
-		$op_content = $this->optimize->wp_easystatic_jscss_buffer($content, $post);
-		$this->generate->es_append_request($op_content);
-
-		return $this->generate->_server_response(
-			[
-			'dir' => $link,
-			'title' => $post->post_title
-		]);
+		else{
+			update_option("wp_static_page", maybe_serialize(WP_Easystatic_Utils::es_options($post)));
+			$link = $this->generate->es_static_subdirectory($post);
+			$op_content = $this->optimize->wp_easystatic_jscss_buffer($read, $post);
+			$this->generate->es_append_request($op_content);
+			$response = [
+				'dir' => $link,
+				'title' => $post->post_title
+			];
+		}
+	
+		return $this->generate->_server_response($response);
 	}
 
 	function es_init_update(){
@@ -270,163 +272,192 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	}
 
 	function es_static_edit( $data ){
-		$id = sanitize_text_field(esc_html($data['id']));
-		$post = get_post($id);
+		$id = sanitize_key(esc_html($data['id']));
+		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		
-		if(!$post){
-			return new WP_Error("es_404", "Can't find post content", true);
+		if(is_wp_error($post)){
+			$response['error'] = new WP_Error(200, "Can't find post content", true);
 		}
-
-		$link = get_permalink($post->ID);
-		$content = stripslashes_deep($this->generate->es_edit($post));
-
-		return $this->generate->_server_response(
-			[
-			'content' => $content, 
+		else{
+			$link = get_permalink($post->ID);
+			$content = stripslashes_deep($this->generate->es_edit($post));
+			$sanitize = $this->optimize->es_content_sanitize($content);
+			$response = [
+			'content' => $sanitize, 
 			'link' => $link, 
 			'title' => $post->post_title
-			]
-		);
+			];
+		}
+
+		return $this->generate->_server_response($response);
 	}
 
 	function es_static_append( $data ){
-		$id = sanitize_text_field(esc_html($data['id']));
-		$post = get_post($id);
-		$content = stripslashes_deep($data['content']);
-		if($this->generate->es_append($post, $content)){
-			return $id;
+		$id = sanitize_key(esc_html($data['id']));
+		$post = WP_Easystatic_Utils::es_sanitize_post($id);
+		$content = stripslashes_deep($this->generate->es_edit($post));
+
+		//make sure content is clean if updating the static html file
+		$clean_html = WP_Easystatic_Utils::es_safe_content($content, $data);
+		$op_content = $this->optimize->minify_html( $clean_html, ['keepComments' => false, 'xhtml' => true]);
+
+		if($this->generate->es_append($post, $op_content)){
+			$response['content'] = $id;
 		}
-		return new WP_Error("es_404", "Can't save your post", true);
+		else{
+			$response['error'] = new WP_Error(200, "Can't save your post", true);
+		}
+
+		return $this->generate->_server_response($response);
 	}
 
 	function es_static_remove( $data ){
-		$id = sanitize_text_field(esc_html($data['id']));
-		$post = get_post($id);
+		$id = sanitize_key(esc_html($data['id']));
+		$static_page = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings('wp_static_page', []));
+		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		$status = 200;
 
-		$data = [
+		if(array_key_exists($post->post_type, $static_page)){
+			$filter = array_filter($static_page[$post->post_type], function($v, $k) use ($id){
+				if($v != $id){
+					return $v;
+				}
+			}, ARRAY_FILTER_USE_BOTH);
+
+			$static_page[$post->post_type] = $filter;
+			update_option('wp_static_page', maybe_serialize($static_page));
+		}
+
+		$response = [
 			'id' => $id,
 			'status' => false
 		];
 
 		if($this->generate->es_remove($post)){
-			$data = [
+			$response = [
 				'id' => $id,
 				'status' => true
 			];
 		}
 		
-		return $this->generate->_server_response($data);
+		return $this->generate->_server_response($response);
 	}
 
 	function es_static_review( $data ){
-		$id = sanitize_text_field(esc_html($data['id']));
-		$post = get_post($id);
+		$id = sanitize_key(esc_html($data['id']));
+		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		$static_content = $this->generate->es_edit($post);
 		$dynamic_content = $this->generate->es_request_dynamic($post);
 		$op_content = $this->optimize->wp_easystatic_jscss_buffer($dynamic_content, $post);
+		$op_content = $this->optimize->es_format_html( $op_content );
+		
+		//sanitize the whole content in dynamic output and static html file
+		$sanitize_dynamic = $this->optimize->es_content_sanitize($op_content);
+		$sanitize_static = $this->optimize->es_content_sanitize($static_content);
 
 		return $this->generate->_server_response([
 			'status' => 1,
 			'title' => $post->post_title,
-			'sitecontent' => stripslashes_deep($static_content),
-			'editcontent' => stripslashes_deep($op_content)
+			'sitecontent' => stripslashes_deep($sanitize_static),
+			'editcontent' => stripslashes_deep($sanitize_dynamic)
 		]);
 	}
 
 	function es_static_update( $data ){
-		$content = stripslashes_deep($data['content']);
-		$id = sanitize_text_field(esc_html($data['id']));
-		$post = get_post($id);
+		$id = sanitize_key(esc_html($data['id']));
+		$post = WP_Easystatic_Utils::es_sanitize_post($id);
+		$content = stripslashes_deep($this->generate->es_edit($post));
+		$clean_html = WP_Easystatic_Utils::es_safe_content($content, $data);
+		$op_content = $this->optimize->minify_html($clean_html, ['keepComments' => false, 'xhtml' => true]);
 
-		if($this->generate->es_static_update($post, $content)){
-			$data = WP_Easystatic_Utils::_status_msg(1, "Successfully Updated");
+		if($this->generate->es_static_update($post, $op_content)){
+			$response = WP_Easystatic_Utils::_status_msg(1, "Successfully Updated");
 		}
 		else
 		{
-			$data = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
+			$response = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
 		}
 
-		return $this->generate->_server_response($data);
+		return $this->generate->_server_response($response);
 	}
 
 	function es_static_urls(){
 		global $directory;
 		$directory = $this->generate->es_static_basedir();
-		$urls = WP_Easystatic_Utils::es_option_settings('static_exclude_url', false);
+		$urls = WP_Easystatic_Utils::es_option_settings('static_exclude_url', []);
 
 		if($urls){
 			$urls = explode("\r\n", $urls);
 		}
 
 		if($this->generate->es_rewrite_static($urls)){
-			$data = WP_Easystatic_Utils::_status_msg(1, "Successfully Updated");
+			$response = WP_Easystatic_Utils::_status_msg(1, "Successfully Updated");
 		}
 		else
 		{
-			$data = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
+			$response = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
 		}
 		
-		return $this->generate->_server_response($data);
+		return $this->generate->_server_response($response);
 	}
 
 	function es_dynamic_urls(){
 
 		if($this->generate->es_rewrite_dynamic()){
-			$data = WP_Easystatic_Utils::_status_msg(1, "Successfully Updated");
+			$response = WP_Easystatic_Utils::_status_msg(1, "Successfully Updated");
 		}
 		else
 		{
-			$data = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
+			$response = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
 		}
 		
-		return $this->generate->_server_response($data);
+		return $this->generate->_server_response($response);
 	}
 
 	function es_create_zip(){
 
 		$directory = WP_Easystatic_Utils::es_option_settings('static_directory', 'generate-files');
 		if($this->generate->create_zip_file(new ZipArchive(), $directory)){
-			$data = WP_Easystatic_Utils::_status_msg(1, "Created new zip file");
+			$response = WP_Easystatic_Utils::_status_msg(1, "Created new zip file");
 		}
 		else
 		{
-			$data = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
+			$response = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
 		}
 		
-		return $this->generate->_server_response($data);
+		return $this->generate->_server_response($response);
 	}
 
 	function es_restore_zip(){
-		$f = esc_url_raw($_POST['url']);
+		$f = esc_url_raw(filter_input(INPUT_POST, 'url', FILTER_SANITIZE_URL));
 		$r = str_replace(get_site_url('/'), EASYSTATIC_BASE, $f);
 		$r = str_replace("/", DIRECTORY_SEPARATOR, $r);
 
 		if($this->generate->restore_backup(new ZipArchive(), $r)){
-			$data = WP_Easystatic_Utils::_status_msg(1, "Restore Backup file");
+			$response = WP_Easystatic_Utils::_status_msg(1, "Restore Backup file");
 		}
 		else
 		{
-			$data = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
+			$response = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
 		}
 
-		return $this->generate->_server_response($data);
+		return $this->generate->_server_response($response);
 	}
 
 	function es_remove_zip(){
-		$f = esc_url_raw($_POST['url']);
+		$f = esc_url_raw(filter_input(INPUT_POST, 'url', FILTER_SANITIZE_URL));
 		$r = str_replace(get_site_url('/'), EASYSTATIC_BASE, $f);
 		$r = str_replace("/", DIRECTORY_SEPARATOR, $r);
 		
 		if($this->generate->remove_backup($r)){
-			$data = WP_Easystatic_Utils::_status_msg(1, "Removed Backup file");
+			$response = WP_Easystatic_Utils::_status_msg(1, "Removed Backup file");
 		}
 		else
 		{
-			$data = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
+			$response = WP_Easystatic_Utils::_status_msg(0, "Invalid Content");
 		}
 
-		return $this->generate->_server_response($data);
+		return $this->generate->_server_response($response);
 
 	}
 }

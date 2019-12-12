@@ -164,22 +164,34 @@ class WP_Easystatic_Template{
 	}
 
 	function tpl_partial_static(WP_EASYSTATIC_Components $component){
-
-		$page = $component->get_base_scanner('page');
-		$post = $component->get_base_scanner('post');
-
-
-		$merge = [];
 		
-		if($page){
-			array_splice($merge, count($merge) - 1, count($page), $page);
-		}
+		$root = EASYSTATIC_BASE . '/' . WP_Easystatic_Utils::es_option_settings('static_directory', 'generate-files');
+
+		$static = WP_Easystatic_Utils::es_list_directory($root);
+
+		$pages = $component->get_base_scanner();
 		
-		if($post){
-			array_splice($merge, count($merge) - 1, count($post), $post);
+		$static_page = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings('wp_static_page', []));
+		
+		$ids = [];
+
+		if(empty($pages) || empty($static_page)){
+			return $ids;
 		}
 
-		return $merge;
+		
+		foreach($pages as $page){
+			if(empty($page)) continue;
+			foreach($page as $p){
+				$sublink = str_replace(get_site_url(), '', get_permalink($p->ID));
+				$sublink = str_replace("/", DIRECTORY_SEPARATOR, $sublink);
+				$sublink = substr($sublink, 0, -1);
+				if(in_array($sublink, $static)){
+					$ids[] = $p->ID;
+				}
+			}
+		}
+		return $ids;
 
 	}
 
@@ -289,14 +301,12 @@ class WP_Easystatic_Template{
 	}
 
 	function es_setting_post_page( $param ){
-		$opt = get_option($param['field']);
-		$is_check = (in_array($param['type'][0], is_array($opt) ? $opt : [])) ? 'checked' : '';
-		WP_Easystatic_Utils::es_sprintf('<p><label><input type="checkbox" value="%s" name="%s[]" %s/><span>%s</span></label></p>', 
-			$param['type'][0], $param['field'], $is_check, __('Page', 'easystatic'));
-		
-		$is_check = (in_array($param['type'][1], is_array($opt) ? $opt : []) && is_array($opt)) ? 'checked' : '';
-		WP_Easystatic_Utils::es_sprintf('<p><label><input type="checkbox" value="%s" name="%s[]" %s/><span>%s</span></label></p>', 
-			$param['type'][1], $param['field'], $is_check, __('Post', 'easystatic'));
+		foreach($param['post_type'] as $type){
+			$opt = get_option($param['field']);
+			$is_check = (in_array($type, is_array($opt) ? $opt : [])) ? 'checked' : '';
+			WP_Easystatic_Utils::es_sprintf('<p><label><input type="checkbox" value="%s" name="%s[]" %s/><span>%s</span></label></p>', 
+			$type, $param['field'], $is_check, ucwords(str_replace("_", ' ', $type)));
+		}
 	}
 
 	function es_setting_minify_css( $param ){

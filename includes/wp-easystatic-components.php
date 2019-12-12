@@ -54,59 +54,42 @@ class WP_Easystatic_Components{
 	/*
 		retrieve all the post ID from scanning
 	*/
-	function get_base_scanner($type = ''){
+	function get_base_scanner(){
 		
-		$root = EASYSTATIC_BASE . '/' . WP_Easystatic_Utils::es_option_settings('static_directory', 'generate-files');
+		$post_type = WP_Easystatic_Utils::es_option_settings('static_page_field', []);
 
-		$static = WP_Easystatic_Utils::es_list_directory($root);
-
-		$pages = [];
-		if($type == 'page'){
-			$pages = WP_Easystatic_Utils::es_scanned_page('page');
-		}
-		else if($type == 'post'){
-			$pages = WP_Easystatic_Utils::es_scanned_page('post');
-		}
+		$pages = array_map(function($type){
+			return WP_Easystatic_Utils::es_scanned_page($type);
+		}, $post_type);
 
 		if(empty($pages)){
 			return false;
 		}
 
-		$ids = [];
-		foreach($pages as $page ){
-			$sublink = str_replace(get_site_url(), '', get_permalink($page->ID));
-			$sublink = str_replace("/", DIRECTORY_SEPARATOR, $sublink);
-			$sublink = substr($sublink, 0, -1);
-			if(in_array($sublink, $static)){
-				$ids[] = $page->ID;
-			}
-		}
-
-		return $ids;
+		return $pages;
 	}
 
 	/*
 		count all generated files
 	*/
-	function count_static_generated(){
-		$total = 0;
+	function count_static_generated($total = 0){
 
 		$root = EASYSTATIC_BASE . '/' . WP_Easystatic_Utils::es_option_settings('static_directory', 'generate-files');
-		$static = WP_Easystatic_Utils::es_list_directory($root);
 		
-		if(empty($static)){
+		if(!file_exists($root)) 
+			return $total;
+
+		$post_type = WP_Easystatic_Utils::es_option_settings('static_page_field', []);
+		$static_page = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings('wp_static_page', []));
+		
+		if(empty($static_page) || empty($post_type)){
 			return $total;
 		}
 		
-		$pages = WP_Easystatic_Utils::es_scanned_page('page');
-		$posts = WP_Easystatic_Utils::es_scanned_page('post');
-		
-		if($pages){
-			$total += count($pages);
-		}
-
-		if($posts){
-			$total += count($posts);
+		foreach($post_type as $type){
+			if(array_key_exists($type, $static_page)){
+				$total += count($static_page[$type]);
+			}
 		}
 
 		return $total;
@@ -115,31 +98,36 @@ class WP_Easystatic_Components{
 	/*
 		if not exists in the static directory then count
 	*/
-	function count_unstatic(){
-
-		$total = 0;
+	function count_unstatic($total = 0){
 
 		$root = EASYSTATIC_BASE . '/' . WP_Easystatic_Utils::es_option_settings('static_directory', 'generate-files');
+
+		if(!file_exists($root)) 
+			return $total;
+
 		$static = WP_Easystatic_Utils::es_list_directory($root);
-		
-		if(empty($static)){
+		$post_type = WP_Easystatic_Utils::es_option_settings('static_page_field', []);
+		$static_page = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings('wp_static_page', []));
+
+		if(empty($static_page)  || empty($post_type)){
 			return $total;
 		}
 
-		$pages = WP_Easystatic_Utils::es_scanned_page('page');
-		$posts = WP_Easystatic_Utils::es_scanned_page('post');
+		$pages = array_map(function($type){
+			return WP_Easystatic_Utils::es_scanned_page($type);
+		}, $post_type);
 
-		if($pages || $posts){
-			foreach($pages as $page ){
-			$sublink = str_replace(get_site_url(), '', get_permalink($page->ID));
-			$sublink = str_replace("/", DIRECTORY_SEPARATOR, $sublink);
-			$sublink = substr($sublink, 0, -1);
+		foreach($pages as $page){
+			if(empty($page)) continue;
+			foreach($page as $p){
+				$sublink = str_replace(get_site_url(), '', get_permalink($p->ID));
+				$sublink = str_replace("/", DIRECTORY_SEPARATOR, $sublink);
+				$sublink = substr($sublink, 0, -1);
 				if(!in_array($sublink, $static)){
 					$total++;
 				}
 			}
 		}
-		
 
 		return $total;
 	}
@@ -366,7 +354,7 @@ class WP_Easystatic_Components{
 		$static = $this->template->tpl_partial_static($this);
 
 		$td_content = array_map(function($id){
-			$page = get_post($id);
+			$page = WP_Easystatic_Utils::es_sanitize_post($id);
 			$link = get_the_permalink($page->ID);
 			$sublink = str_replace(get_site_url(), '', get_permalink($page->ID));
 			$sublink = str_replace("/", DIRECTORY_SEPARATOR, $sublink);

@@ -45,7 +45,7 @@ if(file_exists($path)){
 }
 
 //remove easystatic cache directory
-$cache_path = ABSPATH . DIRECTORY_SEPARATOR . "wp-content" . DIRECTORY_SEPARATOR . "/cache/wp-easystatic";
+$cache_path = ABSPATH . DIRECTORY_SEPARATOR . "wp-content" . DIRECTORY_SEPARATOR . "/cache/easystatic";
 if(file_exists($cache_path)){
 	$dirs = array('css', 'js');
 	foreach($dirs as $dir){
