@@ -12,7 +12,7 @@
   <input type="checkbox" class='static_activate' <?php echo ($obj->static_enable) ? 'checked' : '' ?> />
   <span class="slider round"></span>
   </label>
-  <p><strong><small><?php echo __('This will force to override the htaccess to enabled redirection', 'easystatic') ?></small></strong></p>
+  <p><strong><small><?php echo __('This will enable static HTML in your front-end.', 'easystatic') ?></small></strong></p>
 </div>
 </div>
 <div class='es-container'>
