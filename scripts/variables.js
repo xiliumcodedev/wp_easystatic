@@ -4,6 +4,7 @@ define(['require', 'exports'], function(require, exports){
 
 	return function() {
 		return {
+		     scan_started : false,
 			 start_scan : j("#start_scan"),
 			 update_scan : j("#update_scan"),
 			 percent_bar : j("#percent-bar"),

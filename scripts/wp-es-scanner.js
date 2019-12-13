@@ -21,13 +21,7 @@ j.noConflict();
 var scan = Scanner(j)
 var is_wait_gen = false;
 var is_wait_update = false;
-
 var scanning_process = async () => {
-
-	if(is_wait_update){
-		alert('Please wait for HTML update to completed.');
-		return;
-	}
 
 	t = setTimeout(scanning_process, 2000)
 	var count_em = _var.console_wrapper.find('#count-em')
@@ -82,11 +76,6 @@ var scanning_process = async () => {
 exports.scanning_process = scanning_process
 
 var scan_update = async () => {
-
-	if(is_wait_gen){
-		alert('Please wait for HTML generate to completed.');
-		return;
-	}
 
 	t = setTimeout(scan_update, 2000)
 	var count_em = _var.console_wrapper.find('#count-em')

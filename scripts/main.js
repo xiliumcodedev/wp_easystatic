@@ -75,15 +75,25 @@ requirejs(["jquery", "wp_es_var", "wp_es_scanner", "wp_es_func", "wp_es_cm", "wp
 		events('click', {
 			elem : vars.start_scan,
 			func : function(){
+				if(vars.scan_started){
+					alert("Please wait for scanning to completed.");
+					return;
+				}
 				wp_es_scanner.scanning_process();
+				vars.scan_started = true
 			}
 		})
 
 		events('click', {
 			elem : vars.update_scan,
 			func : function(){
+				if(vars.scan_started){
+					alert("Please wait for scanning to completed.");
+					return;
+				}
 				var type = j(this).data('type')
 				wp_es_scanner.scan_update();
+				vars.scan_started = true
 			}
 		})
 
