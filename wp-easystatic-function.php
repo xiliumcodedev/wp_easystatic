@@ -44,8 +44,9 @@ class WP_Easystatic_Function{
 		add_filter('admin_enqueue_scripts',array($this, 'easystatic_style'));
 		add_action('admin_footer', array($this, 'easystatic_script_footer'));
 		add_filter('script_loader_tag', array($this, 'es_requirejs_init'), 10, 3);
-		add_filter('pre_update_option_static_directory', array($this, 'easystatic_preupdate_option'), 50, 3);
-		add_filter('pre_update_option_static_critical_css', array($this, 'es_optimize_update'), 50, 3);
+		add_filter('pre_update_option_static_directory', array($this, 'es_sanitize_directory'), 50, 3);
+		add_filter('pre_update_option_static_exclude_url', array($this, 'es_sanitize_exclude'), 50, 3);
+		add_filter('pre_update_option_static_critical_css', array($this, 'es_sanitize_update'), 50, 3);
 		add_action('admin_menu', array($this, 'easystatic_dashboard'));
 		add_action('admin_notices', array($this, 'easystatic_admin_notice_template'));
 		add_action( 'rest_api_init', function () {
@@ -118,19 +119,20 @@ class WP_Easystatic_Function{
 
 			$panel = WP_Easystatic_Utils::es_panelurl_tab();
 			$tab = trim(sanitize_key( (isset($panel['tab']) ? $panel['tab'] : '') ));
+			
+			wp_enqueue_script( 'wp_easystatic-require-js', plugins_url( 'scripts/extension/require.js' , __FILE__ ), array(), '0.1' );
+
 			switch ($tab) {
 				case 'static':
-					wp_enqueue_script( 'wp_easystatic-require-js', plugins_url( 'scripts/require.js' , __FILE__ ), array(), '0.1' );
 					wp_localize_script( 'wp_easystatic-require-js', 'wp_easystatic', array('url' => site_url(), 'baseUrl' => plugins_url('scripts', __FILE__), 'tab' => 'static', 'slug' => EASYSTASTIC_SLUG
 		        	));
 					break;
 				case 'backup' :
-					wp_enqueue_script( 'wp_easystatic-backup-require-js', plugins_url( 'scripts/require.js' , __FILE__ ), array(), '0.1' );
-					wp_localize_script( 'wp_easystatic-backup-require-js', 'wp_easystatic', array('url' => site_url(), 'baseUrl' => plugins_url('scripts', __FILE__), 'tab' => 'backup', 'slug' => EASYSTASTIC_SLUG
+					wp_localize_script( 'wp_easystatic-require-js', 'wp_easystatic', array('url' => site_url(), 'baseUrl' => plugins_url('scripts', __FILE__), 'tab' => 'backup', 'slug' => EASYSTASTIC_SLUG
 		        	));
 		        	break;
 				default:
-					wp_enqueue_script( 'wp_easystatic-activate-js', plugins_url( 'scripts/wp-es-activate.js' , __FILE__ ), array(), '0.1' );
+					wp_enqueue_script( 'wp_easystatic-activate-js', plugins_url( 'scripts/package/wp-es-activate.js' , __FILE__ ), array(), '0.1' );
 					wp_localize_script( 'wp_easystatic-activate-js', 'wp_easystatic', array('url' => site_url(), 'slug' => EASYSTASTIC_SLUG
 		        	));
 					break;
@@ -142,17 +144,27 @@ class WP_Easystatic_Function{
 		load all js script via requiresjs configuation
 	*/
 	function es_requirejs_init($tag, $handle, $src){
-		switch ($handle) {
-			case 'wp_easystatic-require-js':
-				$tag = '<script type="text/javascript" data-main="'. EASYSTATIC_URL .'scripts/config" src="' . esc_url( $src ) . '" ></script>';
+		
+		$panel = WP_Easystatic_Utils::es_panelurl_tab();
+		$tab = trim(sanitize_key( (isset($panel['tab']) ? $panel['tab'] : '') ));
+
+		$data_script = "";
+		switch ($tab) {
+			case 'static':
+				$data_script = EASYSTATIC_URL . "scripts/config";
 				break;
-			case 'wp_easystatic-backup-require-js':
-				$tag = '<script type="text/javascript" data-main="'. EASYSTATIC_URL .'scripts/tab-backup-config" src="' . esc_url( $src ) . '" ></script>';
+			case 'backup':
+				$data_script = EASYSTATIC_URL . "scripts/backup-config";
 				break;
 			default:
 				break;
 
 		}
+
+		if($handle == "wp_easystatic-require-js"){
+			$tag = '<script type="text/javascript" data-main="'.$data_script.'" src="' . esc_url( $src ) . '" ></script>';	
+		}
+
 		return $tag;
 	}
 
@@ -271,34 +283,34 @@ class WP_Easystatic_Function{
 
 
 		register_setting( 'wp_easystatic', 'static_directory', 
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 
 		register_setting( 'wp_easystatic', 'static_page_field', 
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 
 		register_setting( 'wp_easystatic', 'static_exclude_url', 
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_textfield']);
 
 		register_setting( 'static_minify', 'static_minify_css',
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 
 		register_setting( 'static_minify', 'static_critical_enable',
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 		
 		register_setting( 'static_minify', 'static_exclude_css',
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 
 		register_setting( 'static_minify', 'static_critical_css',
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_textfield']);
 
 		register_setting( 'static_minify', 'static_minify_js',
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 
 		register_setting( 'static_minify', 'static_exclude_js',
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 
 		register_setting( 'static_minify', 'static_minify_html',
-		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_settings']);
+		['sanitize_callback' => 'WP_Easystatic_Utils::es_sanitize_text']);
 
 		//import function for backup file
 		$this->component->static_zip_upload();
@@ -402,7 +414,7 @@ class WP_Easystatic_Function{
 	/*
 		check static directory field
 	*/
-	function easystatic_preupdate_option($values, $option_name, $old){
+	function es_sanitize_directory($values, $option_name, $old){
 
 		$setting = 'easystatic_notice';
 		$setting_code = esc_attr( 'settings_updated_notice' );
@@ -440,6 +452,8 @@ class WP_Easystatic_Function{
 
 		}
 
+		$values = sanitize_text_field($values);
+
 		if(get_option($option_name) == false && $setting_isvalid){
 
 			add_option($option_name, esc_html($values));
@@ -455,7 +469,7 @@ class WP_Easystatic_Function{
 		return $values;
 	}
 
-	function es_optimize_update($values, $option_name, $old){
+	function es_sanitize_update($values, $option_name, $old){
 
 		$option = get_option($option_name);
 		$setting = 'easystatic_notice';
@@ -491,6 +505,23 @@ class WP_Easystatic_Function{
 			
 			add_settings_error($setting, $setting_code, $setting_msg, $setting_type);
 		}
+	}
+
+	function es_sanitize_exclude( $values, $option_name, $old ){
+		
+		$values = sanitize_textarea_field($values);
+		
+		// removing any extra character
+		$values = preg_replace("/[^A-Za-z0-9\/\n]/", '', $values);
+
+		if(get_option($option_name) == false && $setting_isvalid){
+			add_option($option_name, esc_html($values));
+		}
+		else{
+			update_option($option_name, esc_html($values));
+		}
+
+		return $values;
 	}
 
 }

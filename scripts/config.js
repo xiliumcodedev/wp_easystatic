@@ -37,10 +37,10 @@ requirejs.config({
     }],
 	paths: {
 		wp_es_var : "variables",
-		wp_es_func : "wp-es-func",
-		wp_es_dt : "wp-es-dt",
-		wp_es_alert : "wp-es-alert",
-		wp_es_scanner : "wp-es-scanner",
+		wp_es_func : "package/wp-es-func",
+		wp_es_dt : "package/wp-es-dt",
+		wp_es_alert : "package/wp-es-alert",
+		wp_es_scanner : "package/wp-es-scanner",
 		wp_es_cm : 'codemirror/main'
 
 	},

@@ -1,6 +1,6 @@
 requirejs.config({
 	baseUrl: wp_easystatic.baseUrl,
-	deps: ["tab-backup"],
+	deps: ["backup-main"],
 	config : {
 			wp_es_func : {
 				wp_easystatic : wp_easystatic,
@@ -37,9 +37,9 @@ requirejs.config({
     }],
 	paths: {
 		wp_es_var : "variables",
-		wp_es_func : "wp-es-func",
-		wp_es_dt : "wp-es-dt",
-		wp_es_alert : "wp-es-alert",
+		wp_es_func : "package/wp-es-func",
+		wp_es_dt : "package/wp-es-dt",
+		wp_es_alert : "package/wp-es-alert",
 		wp_es_cm : 'codemirror/main'
 
 	},

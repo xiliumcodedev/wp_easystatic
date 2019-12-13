@@ -234,7 +234,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	}
 
 	function es_ids_read( $data ){
-		$id = sanitize_key(esc_html($data['page_id'] ));
+		$id = absint($data['page_id']);
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		$read = stripslashes_deep($this->generate->es_read($post));
 		if(is_wp_error($read)){
@@ -272,7 +272,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	}
 
 	function es_static_edit( $data ){
-		$id = sanitize_key(esc_html($data['id']));
+		$id = absint($data['id']);
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		
 		if(is_wp_error($post)){
@@ -293,7 +293,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	}
 
 	function es_static_append( $data ){
-		$id = sanitize_key(esc_html($data['id']));
+		$id = absint($data['id']);
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		$content = stripslashes_deep($this->generate->es_edit($post));
 
@@ -312,7 +312,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	}
 
 	function es_static_remove( $data ){
-		$id = sanitize_key(esc_html($data['id']));
+		$id = absint($data['id']);
 		$static_page = (array) maybe_unserialize(WP_Easystatic_Utils::es_option_settings('wp_static_page', []));
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		$status = 200;
@@ -344,7 +344,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	}
 
 	function es_static_review( $data ){
-		$id = sanitize_key(esc_html($data['id']));
+		$id = absint($data['id']);
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		$static_content = $this->generate->es_edit($post);
 		$dynamic_content = $this->generate->es_request_dynamic($post);
@@ -364,7 +364,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	}
 
 	function es_static_update( $data ){
-		$id = sanitize_key(esc_html($data['id']));
+		$id = absint($data['id']);
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		$content = stripslashes_deep($this->generate->es_edit($post));
 		$clean_html = WP_Easystatic_Utils::es_safe_content($content, $data);

@@ -105,11 +105,15 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 		$this->static_rewrite_ht($static_mod, $exclude_urls);
 
 		$path = WP_Easystatic_Utils::es_domain_path();
+		
 		//include wp-json from index.php
 		$static_mod .= "RewriteRule ^^wp-json/? " . $path . "index.php [L]" . PHP_EOL;
 		
 		if(!empty($exclude_urls)){
 			foreach($exclude_urls as $url){
+				if(substr($url, 0, 1) == "/"){
+					$url = substr($url, 1, strlen($url) - 1);
+				}
 				$static_mod .= "RewriteRule ^^" . $url . '/? ' . $path . "index.php [L]" . PHP_EOL;
 			}
 		}

@@ -82,7 +82,7 @@ static function es_extracting_zip($file){
 }
 
 /*
-	wrapper for CURL request
+	wrapper for HTTP request
 */
 static function es_get_sitecontent($url){
 	$response = wp_remote_get($url);
@@ -171,11 +171,21 @@ static function es_lists_ids(&$lists = [], $post_type = 'page'){
 	return array_splice($lists, count($lists) - 1, count($list), $list);
 }
 
-// sanitize settings field
-static function es_sanitize_settings( $opt ){
+// sanitize texbox and checkbox
+static function es_sanitize_text( $opt ){
 	foreach( $opt as $k => $v ) {
         if( isset( $opt[$k] ) ) {
             $opt[$k] = strip_tags(stripslashes($opt[$k]));
+        }
+	}
+	return $opt;
+}
+
+// sanitize textfield
+static function es_sanitize_textfield( $opt ){
+	foreach( $opt as $k => $v ) {
+        if( isset( $opt[$k] ) ) {
+            $opt[$k] = sanitize_textarea_field($opt[$k]);
         }
 	}
 	return $opt;
