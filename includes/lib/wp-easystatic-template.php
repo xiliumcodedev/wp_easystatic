@@ -298,6 +298,8 @@ class WP_Easystatic_Template{
 			$param['field'], 
 			get_option($param['field'])
 		);
+
+		echo "<p>" . __("Exclude from generated static, the url format must have a pathname e.g.: /page-title, /2019/12/sample-post. One line per URL.", "easystatic") . "</p>";
 	}
 
 	function es_setting_post_page( $param ){
@@ -350,6 +352,7 @@ class WP_Easystatic_Template{
 			get_option($param['field']), 
 			$param['field']
 		);
+		echo "<p>" . __("List of CSS url on the text box and separated by comma to exclude from optimized e.g.: style1.css, style2.css.", "easystatic") . "</p>";
 	}
 
 	function es_setting_exclude_js( $param ){
@@ -357,6 +360,8 @@ class WP_Easystatic_Template{
 			get_option($param['field']), 
 			$param['field']
 		);
+
+		echo "<p>" . __("List of JS url on the text box and separated by comma to exclude from optimized e.g.: script1.js, script2.js.", "easystatic") . "</p>";
 	}
 
 }
