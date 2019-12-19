@@ -34,7 +34,7 @@ function WPEasyDT_Plug(){
 	var has_search = false;
 	var temp_tbody = null;
 	var modal_alert = j('body').WPEasyAlert({
-		'backgroundColor' : '#00000047',
+		'backgroundColor' : 'rgba(0, 0, 0, 0.50)',
 	});
 
 
@@ -103,7 +103,6 @@ function WPEasyDT_Plug(){
 					events('click', {
 						elem : j('#save-source'),
 						func : function(){
-							modal_alert.build()
 							var static_page = static_file(j);
 							static_page.do_promise(
 								static_page.append_static(id, editor.getValue())

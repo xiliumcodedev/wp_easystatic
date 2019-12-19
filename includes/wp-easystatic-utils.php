@@ -84,12 +84,8 @@ static function es_extracting_zip($file){
 /*
 	wrapper for HTTP request
 */
-static function es_get_sitecontent($url){
+static function es_get_sitecontent($url, $show_error = false){
 	$response = wp_remote_get($url);
-	
-	if(empty($response)){
-		return false;
-	}
 
 	$status = wp_remote_retrieve_response_code($response);
 	$header = wp_remote_retrieve_header($response, 'content-type');
@@ -120,8 +116,17 @@ static function es_get_sitecontent($url){
 			break;
 	}
 	
-	if(!empty($content['error'])){
+	if(!empty($content['error']) && $show_error){
 		$content['content'] = "<html><head></head><body>".$content['error']."</body></html>";
+	}
+
+	if(is_wp_error($response)) {
+		
+		$err_map = array_map(function($code) use ($response){
+			return $response->get_error_message($code);
+		}, $response->get_error_codes());
+
+		$content['content'] = implode("|", $err_map);
 	}
 
 	return $content['content'];
@@ -211,18 +216,19 @@ static function es_safe_content( $content, $data = [] ){
 
 	$content_split = explode("</head>", $content, 2);
 
-	$scripts = [];
+	$copies = [];
 	if (preg_match_all( '#<script.*</script>#Usmi', $content_split[1], $matches)){
 		foreach ( $matches[0] as $tag ) {
-			$scripts[] = $tag;
+			$copies[] = $tag;
 		}
 	}
 
-	$content = stripslashes_deep(wp_filter_post_kses($data['content']));
+	//clean js content
+	$remove_js = preg_replace('#<script.*</script>#Usmi', "", $data['content']);
+	$content = stripslashes_deep($remove_js);
 
-	//returning all scripts into footer
-	foreach($scripts as $script){
-		$content .= $script . "\n\r";
+	foreach($copies as $copy){
+		$content .= $copy;
 	}
 
 	preg_match("/\<body (.*)([^>])/", $content_split[1], $body);
@@ -232,9 +238,12 @@ static function es_safe_content( $content, $data = [] ){
 	return $content;
 }
 
+
+// $_POST, $_GET replaced with
 static function es_filter_input( $type, $name ){
 	return filter_input( $type, $name, FILTER_UNSAFE_RAW) || null;
 }
+
 
 static function es_remove_admin_notice(){
 	remove_all_actions('admin_notices');

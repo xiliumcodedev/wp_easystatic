@@ -25,6 +25,7 @@ $del_opt = [
 	"static_exclude_css",
 	"static_critical_css",
 	"static_minify_js",
+	"static_exclude_js"
 ];
 
 foreach($del_opt as $opt){

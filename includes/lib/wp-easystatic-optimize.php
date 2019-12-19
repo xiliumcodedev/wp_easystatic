@@ -99,6 +99,32 @@ function cache_minified( $content, $type, $id ){
 
 }
 
+function hide_content( $mark, $content ){
+	if(strpos( $content, '<!--[if' )){
+		$content = preg_replace_callback("#<!--\[if.*?\[endif\]-->#is", 
+			function( $matches ) use ($mark) {
+				return '%%'. $mark . '%%' . base64_encode($matches[0]) . '%%';
+			},
+			$content
+		);
+	}
+	return $content;
+}
+
+
+function restore_content( $mark, $content ){
+	if(strpos( $content, $mark )){
+		$content = preg_replace_callback("#%%".$mark."%%(.*?)%%#is", 
+			function( $matches ) use ($mark) {
+				return base64_decode($matches[1]);
+			},
+			$content
+		);
+	}
+
+	return $content;
+}
+
 /*
 	wrapper to filter the style from HTML ouput
 */
@@ -109,7 +135,8 @@ function filtered_css_codes( &$content, $exclude = false ){
 	$head = $split[0];
 	$body = $split[1];
 	$default_exclude = array(
-		'fonts.googleapis.com/css'
+		'fonts.googleapis.com/css',
+		'font'
 	);
 
 	$styles = [];
@@ -143,6 +170,7 @@ function filtered_css_codes( &$content, $exclude = false ){
 			}
 		}
 	}
+
 	return $styles;
 }
 
@@ -156,7 +184,7 @@ function filtered_js_codes( &$content, $exclude = false ){
 	    'ws.amazon.com/widgets','media.fastclick.net','/ads/','comment-form-quicktags/quicktags.php','edToolbar',
 	    'intensedebate.com','scripts.chitika.net/','_gaq.push','jotform.com/','admin-bar.min.js','GoogleAnalyticsObject',
 	    'plupload.full.min.js','syntaxhighlighter','adsbygoogle','gist.github.com','_stq','nonce','post_id','data-noptimize'
-	    ,'logHuman', 'googletagmanager', 'application/ld+json', 'data-cfasync'
+	    ,'logHuman', 'googletagmanager', 'application/ld+json', 'data-cfasync', 'text/template'
 		 );
 
 	$scripts = [];
@@ -217,12 +245,15 @@ function es_format_html($content){
 	
 	$strip_content = stripslashes_deep($content);
 
-	$dom = new DOMDocument();
-	@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED);
-	@$dom->preserveWhiteSpace = false; 
-	@$dom->formatOutput = true;
-	return @$dom->saveHTML();
+	if(class_exists('DOMDocument')){
+		$dom = new DOMDocument();
+		@$dom->loadHTML($strip_content, LIBXML_HTML_NOIMPLIED);
+		@$dom->preserveWhiteSpace = false; 
+		@$dom->formatOutput = true;
+		return @$dom->saveHTML();
+	}
 
+	return $strip_content;
 }
 
 /*
@@ -233,7 +264,7 @@ function es_content_sanitize( $content ){
 	$content_split = preg_split("/\<body (.*)([^>])/", $content);
 	$remove_js = preg_replace('#<script.*</script>#Usmi', "", $content_split[1]);
 	$content = preg_replace("/\<\/body.*[^>].*/", "", $remove_js);
-	$content = stripslashes_deep(wp_filter_post_kses($content));
+	$content = stripslashes_deep($content);
 
 	return $content;
 }
@@ -242,6 +273,8 @@ function es_content_sanitize( $content ){
 	start to optimize
 */
 function wp_easystatic_jscss_buffer( $content, $post ){
+	$content = $this->hide_content('HIDE_IE', $content);
+
 	$min_css_opt = get_option('static_minify_css');
 	$is_critical_css = get_option('static_critical_enable');
 	if($min_css_opt){
@@ -272,6 +305,8 @@ function wp_easystatic_jscss_buffer( $content, $post ){
 		$inject = apply_filters('easystastic_url_inject', "<script defer src=\"" . EASYSTATIC_CONTENT . EASYSTASTIC_CACHE .'/js/' . $file . "\" ></script>");
 		$content = $this->inject_cache_file($inject, $content, false);
 	}
+
+	$content = $this->restore_content('HIDE_IE', $content);
 
 	$min_html_opt = get_option('static_minify_html');
 	if($min_html_opt){

@@ -236,7 +236,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 	function es_ids_read( $data ){
 		$id = absint($data['page_id']);
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
-		$read = stripslashes_deep($this->generate->es_read($post));
+		$read = $this->generate->es_read($post);
 		if(is_wp_error($read)){
 			$response['error'] = $read;
 		}
@@ -244,7 +244,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 			update_option("wp_static_page", maybe_serialize(WP_Easystatic_Utils::es_options($post)));
 			$link = $this->generate->es_static_subdirectory($post);
 			$op_content = $this->optimize->wp_easystatic_jscss_buffer($read, $post);
-			$this->generate->es_append_request($op_content);
+			$this->generate->es_append_request(stripslashes_deep($op_content));
 			$response = [
 				'dir' => $link,
 				'title' => $post->post_title
@@ -275,10 +275,7 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 		$id = absint($data['id']);
 		$post = WP_Easystatic_Utils::es_sanitize_post($id);
 		
-		if(is_wp_error($post)){
-			$response['error'] = new WP_Error(200, "Can't find post content", true);
-		}
-		else{
+		if($post){
 			$link = get_permalink($post->ID);
 			$content = stripslashes_deep($this->generate->es_edit($post));
 			$sanitize = $this->optimize->es_content_sanitize($content);
@@ -287,6 +284,9 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 			'link' => $link, 
 			'title' => $post->post_title
 			];
+		}
+		else{
+			$response['error'] = new WP_Error(200, "Can't find post content", true);
 		}
 
 		return $this->generate->_server_response($response);
@@ -387,9 +387,9 @@ class WP_Easystatic_Controller extends WP_REST_Controller{
 		$urls = WP_Easystatic_Utils::es_option_settings('static_exclude_url', []);
 
 		if($urls){
-			$urls = explode("\r\n", $urls);
+			$urls = explode("\n", $urls);
 		}
-
+		
 		if($this->generate->es_rewrite_static($urls)){
 			$response = WP_Easystatic_Utils::_status_msg(1, "Successfully Updated");
 		}

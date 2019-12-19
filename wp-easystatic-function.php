@@ -452,17 +452,7 @@ class WP_Easystatic_Function{
 
 		}
 
-		$values = sanitize_text_field($values);
-
-		if(get_option($option_name) == false && $setting_isvalid){
-
-			add_option($option_name, esc_html($values));
-		}
-		else{
-
-			update_option($option_name, esc_html($values));
-		
-		}
+		$values = sanitize_key(sanitize_text_field($values));
 		
 		add_settings_error($setting, $setting_code, $setting_msg, $setting_type);
 
@@ -477,16 +467,7 @@ class WP_Easystatic_Function{
 		$setting_msg = __("Settings saved and cache is empty.", "easystatic");
 		$setting_type = "updated";
 
-		if($option == false){
-		
-			add_option($option_name, strip_tags(stripslashes($value)));
-		
-		}
-		else{
-
-			update_option($option_name, strip_tags(stripslashes($value)));
-		
-		}
+		$values = strip_tags(stripslashes($values));
 
 		if(WP_Easystatic_Utils::es_filter_input(INPUT_POST, 'clear_cache')){
 			$cache_path = EASYSTATIC_BASE . DIRECTORY_SEPARATOR . "wp-content" . DIRECTORY_SEPARATOR . "/cache/" . EASYSTASTIC_SLUG;
@@ -505,6 +486,8 @@ class WP_Easystatic_Function{
 			
 			add_settings_error($setting, $setting_code, $setting_msg, $setting_type);
 		}
+
+		return $values;
 	}
 
 	function es_sanitize_exclude( $values, $option_name, $old ){
@@ -512,14 +495,20 @@ class WP_Easystatic_Function{
 		$values = sanitize_textarea_field($values);
 		
 		// removing any extra character
-		$values = preg_replace("/[^A-Za-z0-9\/\n]/", '', $values);
+		$values = preg_replace("/[^A-Za-z0-9\/\n\-\_]/", '', $values);
 
-		if(get_option($option_name) == false && $setting_isvalid){
-			add_option($option_name, esc_html($values));
-		}
-		else{
-			update_option($option_name, esc_html($values));
-		}
+		$urls = explode("\n", $values);
+
+		//removed any mutiple slashes from start and end
+		$values = array_map(function($v){
+			return preg_replace('/(?<!\w)\/+/', '', $v);
+		}, $urls);
+
+		$values = array_map(function($v){
+			return preg_replace('/\W+$/', '', $v);
+		}, $values);
+
+		$values = implode("\n", $values);
 
 		return $values;
 	}

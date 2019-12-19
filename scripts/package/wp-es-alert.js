@@ -10,12 +10,12 @@ j.fn.WPEasyAlert = function(options){
 	var $this = this;
 
 	var settings = j.extend({
-            backgroundColor : '#000',
+            backgroundColor : 'rgba(0, 0, 0, 0.50)',
             animatedStyle : 'linear',
      }, options );
 
 
-	var background = function(){
+	this.background = function(){
 		var elem = j("<div>");
 		elem.css({
 			'backgroundColor' : settings.backgroundColor,
@@ -28,7 +28,7 @@ j.fn.WPEasyAlert = function(options){
 		return elem
 	}
 
-	var modal = function(){
+	this.modal = function(){
 		var elem = j('<div>');
 		elem.css({
 			'backgroundColor' : '#FFF',
@@ -41,18 +41,15 @@ j.fn.WPEasyAlert = function(options){
 		return elem
 	}
 
-	var topModal  = function(_){
+	this.topModal  = function(bg, md){
 		var elem = j('<div>');
 		var close = j("<a>");
 		close.attr('src', 'javascript:void(0)');
 		close.addClass('modal_close_btn');
 		close.click(function(){
-			_['md'].animate({
-				'opacity' : '0'
-			}, 200, 'swing', function(){
-				_['bg'].remove()
-				j("#TB_closeWindowButton").trigger('click')
-			});
+			md.remove();
+			bg.remove()
+			j("#TB_closeWindowButton").trigger('click')
 		})
 		elem.css({
 			'backgroundColor' : '#FFF',
@@ -64,7 +61,7 @@ j.fn.WPEasyAlert = function(options){
 		return elem
 	}
 
-	var messageBox = function(textMessage){
+	this.messageBox = function(textMessage){
 		var elem = j('<div>');
 		var span = j('<span>');
 		span.css({
@@ -75,18 +72,16 @@ j.fn.WPEasyAlert = function(options){
 		return elem
 	}
 
-	this.build = function(){
-		var bg = background();
+	this.showMessage = function(textMessage){
+		var bg = $this.background();
 		j($this).append(bg);
-		this.showMessage = function(textMessage){
-			var md = modal();
-			md.append(topModal({ md : md, bg : bg}))
-			md.append(messageBox(textMessage))
-			bg.append(md)
-		}
+		var md = $this.modal();
+		md.append($this.topModal(bg, md))
+		md.append($this.messageBox(textMessage))
+		bg.append(md)
 	}
 
-	return this;
+	return $this;
 }
 
 });

@@ -15,7 +15,7 @@ requirejs(["jquery", "wp_es_var", "wp_es_scanner", "wp_es_func", "wp_es_cm", "wp
  	j(document).ready(function(){
  		var dt = j('#datatable').WPEasyDT();
  		var modal_alert = j('body').WPEasyAlert({
-			'backgroundColor' : '#00000047',
+			'backgroundColor' : 'rgba(0, 0, 0, 0.50)',
 		});
 
 		events('change', {
@@ -51,7 +51,6 @@ requirejs(["jquery", "wp_es_var", "wp_es_scanner", "wp_es_func", "wp_es_cm", "wp
 			func : function(){
 				var cm_content = codemirror.mergeView().editor().getValue();
 				var id = dt.current_id()
-				modal_alert.build()
 				static_file.do_promise(
 					static_file.update_static(id, cm_content)
 				).then((res) => {

@@ -25,17 +25,16 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 	*  @return format content
 	*/
 	function es_edit($post = false){
-		
-		$dom = new DOMDocument();
-		
 		$content = file_get_contents(EASYSTATIC_BASE . '/' . 
 			$this->es_static_basedir() . $this->es_static_subdirectory($post) . 'index.html');
-
-		@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED);
-		@$dom->preserveWhiteSpace = false; 
-		@$dom->formatOutput = true;
-		return @$dom->saveHTML();
-		
+		if(class_exists('DOMDocument')){
+			$dom = new DOMDocument();
+			@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED);
+			@$dom->preserveWhiteSpace = false; 
+			@$dom->formatOutput = true;
+			return @$dom->saveHTML();
+		}
+		return $content;
 	}
 
 	/*
@@ -70,13 +69,16 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 	function es_request_dynamic($post = false){
 		$link = get_permalink($post->ID);
 		$content = WP_Easystatic_Utils::es_get_sitecontent($link);
-		$strip_content = stripslashes_deep($content);
-
-		$dom = new DOMDocument();
-		@$dom->loadHTML($strip_content, LIBXML_HTML_NOIMPLIED);
-		@$dom->preserveWhiteSpace = false; 
-		@$dom->formatOutput = true;
-		return @$dom->saveHTML();
+		
+		if(class_exists('DOMDocument')){
+			$dom = new DOMDocument();
+			@$dom->loadHTML($content, LIBXML_HTML_NOIMPLIED);
+			@$dom->preserveWhiteSpace = false; 
+			@$dom->formatOutput = true;
+			return @$dom->saveHTML();
+		}
+		
+		return $content;
 	}
 
 	/*
@@ -111,9 +113,6 @@ class WP_Easystatic_Generate extends WP_Easystatic_Request{
 		
 		if(!empty($exclude_urls)){
 			foreach($exclude_urls as $url){
-				if(substr($url, 0, 1) == "/"){
-					$url = substr($url, 1, strlen($url) - 1);
-				}
 				$static_mod .= "RewriteRule ^^" . $url . '/? ' . $path . "index.php [L]" . PHP_EOL;
 			}
 		}
